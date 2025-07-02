@@ -403,9 +403,9 @@ workflow seaseq {
         call samtools.mergebam { input:
             bamfiles = indv_mapping.sorted_bam,
             metricsfiles = indv_bfs.metrics_out,
-            default_location = if defined(results_name) then results_name + "/BAM_files"
+            default_location = if defined(results_name) then "~{results_name + '/BAM_files'}"
                 else "AllMerge_" + length(indv_mapping.sorted_bam) + "_mapped" + "/BAM_files",
-            outputfile = if defined(results_name) then results_name + ".sorted.bam" else "AllMerge_"
+            outputfile = if defined(results_name) then "~{results_name + '.sorted.bam'}" else "AllMerge_"
                 + length(fastqfiles) + "_mapped.sorted.bam",
         }
 
