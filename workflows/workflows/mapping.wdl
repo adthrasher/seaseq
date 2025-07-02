@@ -12,9 +12,9 @@ workflow mapping {
         Array[File] index_files
         File? metricsfile
         File? blacklist
-        Int? read_length = 75
+        Int read_length = 75
         Boolean paired_end = false
-        String? strandedness = 'fr'
+        String strandedness = 'fr'
 
         String default_location = "BAM_files"
         String? results_name
