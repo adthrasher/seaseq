@@ -182,7 +182,7 @@ workflow seaseq {
         # outputs:
         #    fastqdump.fastqfile : downloaded sample files in fastq.gz format
         Array[String] string_sra = [
-            1,
+            "1",
         ]  #buffer to allow for sra_id optionality
         Array[String] s_sraid = select_first([
             sample_sraid,
