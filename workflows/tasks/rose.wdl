@@ -37,8 +37,6 @@ task rose {
 
         BAMFILE=~{basename(bamfile)}
         CONTROL=~{if defined(control) then "input_control.bam" else "N/A"}
-        TSS=~{if defined(tss) then tss else "\"default (0)\""}
-        STITCH=~{if defined(stitch) then stitch else "\"default (5000)\""}
         FILEA=~{bedfile_auto}
         FILEB=~{bedfile_all}
         OUTPUTDIR=~{outputdir}
