@@ -201,8 +201,8 @@ workflow peaseq {
 
         # group: analysis_parameter
         # Read Mapping parameters for bowtie
-        Int? insertsize = 600
-        String? strandedness = "fr"
+        Int insertsize = 600
+        String strandedness = "fr"
 
         # Additional options
         String? results_name
@@ -438,8 +438,8 @@ workflow peaseq {
     ]))
 
     # transpose to paired-end tuples
-    Array[Pair[File, File]] original_sample_fastqfiles = zip(original_sample_R1, original_sample_R2)
-    Array[Pair[File, File]] original_control_fastqfiles = zip(original_control_R1, original_control_R2)
+    Array[Pair[File, File]] original_sample_fastqfiles = zip(original_sample_R1, original_sample_R2 )
+    Array[Pair[File, File]] original_control_fastqfiles = zip(original_control_R1, original_control_R2 )
 
     ### ------------------------------------------------- ###
     ### ---------------- S E C T I O N 1 ---------------- ###
@@ -449,8 +449,10 @@ workflow peaseq {
     # if multiple fastqfiles are provided
     Boolean multi_fastqpair = if length(original_sample_fastqfiles) > 1 then true else false
     Boolean one_fastqpair = if length(original_sample_fastqfiles) == 1 then true else false
-    Boolean multi_control_fastqpair = if length(original_control_fastqfiles) > 1 then true else false
-    Boolean one_control_fastqpair = if length(original_control_fastqfiles) == 1 then true else false
+    Boolean multi_control_fastqpair = if length(original_control_fastqfiles) > 1 then true
+        else false
+    Boolean one_control_fastqpair = if length(original_control_fastqfiles) == 1 then true
+        else false
 
     if (defined(spikein_bowtie_index) || defined(spikein_reference)) {
         scatter (eachfastq in original_all_sample_fastqfiles) {
@@ -1322,15 +1324,15 @@ workflow peaseq {
         keep_dup = "auto",
         egs = egs.genomesize,
         output_name = basename(SE_s_mergebam_afterbklist, ".bam") + "+control-p9_kd-auto",
-        default_location = if defined(results_name) then results_name + "/single-end_mode/PEAKS/NARROW_peaks"
-            + "/" + basename(SE_s_mergebam_afterbklist, ".bam") + "+control-p9_kd-auto"
+        default_location = if defined(results_name) then "~{results_name + '/single-end_mode/PEAKS/NARROW_peaks'
+            + '/' + basename(SE_s_mergebam_afterbklist, '.bam') + '+control-p9_kd-auto'}"
             else if multi_fastqpair then "AllCases_" + length(sample_fastqfiles) + "fastqpairs+control/single-end_mode/PEAKS/NARROW_peaks"
             + "/" + basename(SE_s_mergebam_afterbklist, ".bam") + "+control-p9_kd-auto"
             else sub(basename(sample_fastqfiles[0].left), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz",
             "") + "+control/single-end_mode/PEAKS/NARROW_peaks" + "/" + basename(
             SE_s_mergebam_afterbklist, ".bam") + "+control-p9_kd-auto",
-        coverage_location = if defined(results_name) then results_name + "/single-end_mode/COVERAGE_files/NARROW_peaks"
-            + "/" + basename(SE_s_mergebam_afterbklist, ".bam") + "+control-p9_kd-auto"
+        coverage_location = if defined(results_name) then "~{results_name + '/single-end_mode/COVERAGE_files/NARROW_peaks'
+            + '/' + basename(SE_s_mergebam_afterbklist, '.bam') + '+control-p9_kd-auto'}"
             else if multi_fastqpair then "AllCases_" + length(sample_fastqfiles) + "fastqpairs+control/single-end_mode/COVERAGE_files/NARROW_peaks"
             + "/" + basename(SE_s_mergebam_afterbklist, ".bam") + "+control-p9_kd-auto"
             else sub(basename(sample_fastqfiles[0].left), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz",
@@ -1339,7 +1341,7 @@ workflow peaseq {
     }
 
     call util.addreadme as SE_addreadme { input: default_location = if defined(
-        results_name) then results_name + "/single-end_mode/PEAKS" else if multi_fastqpair
+        results_name) then "~{results_name + '/single-end_mode/PEAKS'}" else if multi_fastqpair
         then "AllCases_" + length(sample_fastqfiles) + "fastqpairs+control/single-end_mode/PEAKS"
         else sub(basename(sample_fastqfiles[0].left), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz",
         "") + "+control/single-end_mode/PEAKS" }
@@ -1351,16 +1353,16 @@ workflow peaseq {
         keep_dup = "all",
         egs = egs.genomesize,
         output_name = basename(SE_s_mergebam_afterbklist, ".bam") + "+control-p9_kd-all",
-        default_location = if defined(results_name) then results_name + "/single-end_mode/PEAKS/NARROW_peaks"
-            + "/" + basename(SE_s_mergebam_afterbklist, ".bam") + "+control-p9_kd-all"
-            else if multi_fastqpair then "AllCases_" + length(sample_fastqfiles) + "fastqpairs+control/single-end_mode/PEAKS/NARROW_peaks"
+        default_location = if defined(results_name) then "~{results_name + '/single-end_mode/PEAKS/NARROW_peaks'
+            + '/' + basename(SE_s_mergebam_afterbklist, '.bam') + '+control-p9_kd-all'}" else if multi_fastqpair
+            then "AllCases_" + length(sample_fastqfiles) + "fastqpairs+control/single-end_mode/PEAKS/NARROW_peaks"
             + "/" + basename(SE_s_mergebam_afterbklist, ".bam") + "+control-p9_kd-all"
             else sub(basename(sample_fastqfiles[0].left), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz",
             "") + "+control/single-end_mode/PEAKS/NARROW_peaks" + "/" + basename(
             SE_s_mergebam_afterbklist, ".bam") + "+control-p9_kd-all",
-        coverage_location = if defined(results_name) then results_name + "/single-end_mode/COVERAGE_files/NARROW_peaks"
-            + "/" + basename(SE_s_mergebam_afterbklist, ".bam") + "+control-p9_kd-all"
-            else if multi_fastqpair then "AllCases_" + length(sample_fastqfiles) + "fastqpairs+control/single-end_mode/COVERAGE_files/NARROW_peaks"
+        coverage_location = if defined(results_name) then "~{results_name + '/single-end_mode/COVERAGE_files/NARROW_peaks'
+            + '/' + basename(SE_s_mergebam_afterbklist, '.bam') + '+control-p9_kd-all'}" else if multi_fastqpair
+            then "AllCases_" + length(sample_fastqfiles) + "fastqpairs+control/single-end_mode/COVERAGE_files/NARROW_peaks"
             + "/" + basename(SE_s_mergebam_afterbklist, ".bam") + "+control-p9_kd-all"
             else sub(basename(sample_fastqfiles[0].left), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz",
             "") + "+control/single-end_mode/COVERAGE_files/NARROW_peaks" + "/" + basename(
@@ -1373,15 +1375,15 @@ workflow peaseq {
         nomodel = true,
         egs = egs.genomesize,
         output_name = basename(SE_s_mergebam_afterbklist, ".bam") + "+control-nm",
-        default_location = if defined(results_name) then results_name + "/single-end_mode/PEAKS/NARROW_peaks"
-            + "/" + basename(SE_s_mergebam_afterbklist, ".bam") + "+control-nm" else if multi_fastqpair
+        default_location = if defined(results_name) then "~{results_name + '/single-end_mode/PEAKS/NARROW_peaks'
+            + '/' + basename(SE_s_mergebam_afterbklist, '.bam') + '+control-nm'}" else if multi_fastqpair
             then "AllCases_" + length(sample_fastqfiles) + "fastqpairs+control/single-end_mode/PEAKS/NARROW_peaks"
             + "/" + basename(SE_s_mergebam_afterbklist, ".bam") + "+control-nm" else sub(
             basename(sample_fastqfiles[0].left), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz", ""
             ) + "+control/single-end_mode/PEAKS/NARROW_peaks" + "/" + basename(
             SE_s_mergebam_afterbklist, ".bam") + "+control-nm",
-        coverage_location = if defined(results_name) then results_name + "/single-end_mode/COVERAGE_files/NARROW_peaks"
-            + "/" + basename(SE_s_mergebam_afterbklist, ".bam") + "+control-nm" else if multi_fastqpair
+        coverage_location = if defined(results_name) then "~{results_name + '/single-end_mode/COVERAGE_files/NARROW_peaks'
+            + '/' + basename(SE_s_mergebam_afterbklist, '.bam') + '+control-nm'}" else if multi_fastqpair
             then "AllCases_" + length(sample_fastqfiles) + "fastqpairs+control/single-end_mode/COVERAGE_files/NARROW_peaks"
             + "/" + basename(SE_s_mergebam_afterbklist, ".bam") + "+control-nm" else sub(
             basename(sample_fastqfiles[0].left), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz", ""
@@ -1397,7 +1399,7 @@ workflow peaseq {
         control_bamfile = SE_c_merge_markdup.mkdupbam,
         control_bamindex = SE_c_merge_mkdup.indexbam,
         samplename = basename(SE_s_merge_markdup.mkdupbam, ".bam") + "+control",
-        default_location = if defined(results_name) then results_name + "/single-end_mode/BAM_Density"
+        default_location = if defined(results_name) then "~{results_name + '/single-end_mode/BAM_Density'}"
             else if multi_fastqpair then "AllCases_" + length(sample_fastqfiles) + "fastqpairs+control/single-end_mode/BAM_Density"
             else sub(basename(sample_fastqfiles[0].left), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz",
             "") + "+control/single-end_mode/BAM_Density",
@@ -1416,11 +1418,11 @@ workflow peaseq {
         genome_fraction = egs.genomefraction,
         fragmentlength = SE_s_mergebam.avg_readlength,
         outputname = basename(SE_s_forsicerbed.bedfile, ".bed") + "+control",
-        default_location = if defined(results_name) then results_name + "/single-end_mode/PEAKS/BROAD_peaks"
+        default_location = if defined(results_name) then "~{results_name + '/single-end_mode/PEAKS/BROAD_peaks'}"
             else if multi_fastqpair then "AllCases_" + length(sample_fastqfiles) + "fastqpairs+control/single-end_mode/PEAKS/BROAD_peaks"
             else sub(basename(sample_fastqfiles[0].left), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz",
             "") + "+control/single-end_mode/PEAKS/BROAD_peaks",
-        coverage_location = if defined(results_name) then results_name + "/single-end_mode/COVERAGE_files/BROAD_peaks"
+        coverage_location = if defined(results_name) then "~{results_name + '/single-end_mode/COVERAGE_files/BROAD_peaks'}"
             else if multi_fastqpair then "AllCases_" + length(sample_fastqfiles) + "fastqpairs+control/single-end_mode/COVERAGE_files/BROAD_peaks"
             else sub(basename(sample_fastqfiles[0].left), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz",
             "") + "+control/single-end_mode/COVERAGE_files/BROAD_peaks",
@@ -1434,7 +1436,7 @@ workflow peaseq {
         controlindex = SE_c_merge_mkdup.indexbam,
         bedfile_auto = SE_macs.peakbedfile,
         bedfile_all = SE_all.peakbedfile,
-        default_location = if defined(results_name) then results_name + "/single-end_mode/PEAKS/STITCHED_peaks"
+        default_location = if defined(results_name) then "~{results_name + '/single-end_mode/PEAKS/STITCHED_peaks'}"
             else if multi_fastqpair then "AllCases_" + length(sample_fastqfiles) + "fastqpairs+control/single-end_mode/PEAKS/STITCHED_peaks"
             else sub(basename(sample_fastqfiles[0].left), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz",
             "") + "+control/single-end_mode/PEAKS/STITCHED_peaks",
@@ -1458,8 +1460,8 @@ workflow peaseq {
         chromsizes = samtools_faidx.chromsizes,
         control = true,
         xlsfile = SE_macs.peakxlsfile,
-        default_location = if defined(results_name) then results_name + "/single-end_mode/COVERAGE_files/NARROW_peaks/"
-            + sub(basename(SE_macs.peakbedfile), "_peaks.bed", "") + "/control" else sub(
+        default_location = if defined(results_name) then "~{results_name + '/single-end_mode/COVERAGE_files/NARROW_peaks/'
+            + sub(basename(SE_macs.peakbedfile), '_peaks.bed', '') + '/control'}" else sub(
             basename(SE_s_mergebam_afterbklist), ".sorted.b.*$", "") + "+control/single-end_mode/COVERAGE_files/NARROW_peaks/"
             + sub(basename(SE_macs.peakbedfile), "_peaks.bed", "") + "/control",
     }
@@ -1472,8 +1474,8 @@ workflow peaseq {
         chromsizes = samtools_faidx.chromsizes,
         control = true,
         xlsfile = SE_all.peakxlsfile,
-        default_location = if defined(results_name) then results_name + "/single-end_mode/COVERAGE_files/NARROW_peaks/"
-            + sub(basename(SE_all.peakbedfile), "_peaks.bed", "") + "/control" else sub(
+        default_location = if defined(results_name) then "~{results_name + '/single-end_mode/COVERAGE_files/NARROW_peaks/'
+            + sub(basename(SE_all.peakbedfile), '_peaks.bed', '') + '/control'}" else sub(
             basename(SE_s_mergebam_afterbklist), ".sorted.b.*$", "") + "+control/single-end_mode/COVERAGE_files/NARROW_peaks/"
             + sub(basename(SE_all.peakbedfile), "_peaks.bed", "") + "/control",
     }
@@ -1485,8 +1487,8 @@ workflow peaseq {
         chromsizes = samtools_faidx.chromsizes,
         control = true,
         xlsfile = SE_nomodel.peakxlsfile,
-        default_location = if defined(results_name) then results_name + "/single-end_mode/COVERAGE_files/NARROW_peaks/"
-            + sub(basename(SE_nomodel.peakbedfile), "_peaks.bed", "") + "/control" else sub(
+        default_location = if defined(results_name) then "~{results_name + '/single-end_mode/COVERAGE_files/NARROW_peaks/'
+            + sub(basename(SE_nomodel.peakbedfile), '_peaks.bed', '') + '/control'}" else sub(
             basename(SE_s_mergebam_afterbklist), ".sorted.b.*$", "") + "+control/single-end_mode/COVERAGE_files/NARROW_peaks/"
             + sub(basename(SE_nomodel.peakbedfile), "_peaks.bed", "") + "/control",
     }
@@ -1496,8 +1498,8 @@ workflow peaseq {
         bedfile = SE_macs.peakbedfile,
         chromsizes = samtools_faidx.chromsizes,
         summitfile = SE_macs.summitsfile,
-        default_location = if defined(results_name) then results_name + "/single-end_mode/PEAKS_Annotation/NARROW_peaks"
-            + "/" + sub(basename(SE_macs.peakbedfile), "_peaks.bed", "") else if multi_fastqpair
+        default_location = if defined(results_name) then "~{results_name + '/single-end_mode/PEAKS_Annotation/NARROW_peaks'
+            + '/' + sub(basename(SE_macs.peakbedfile), '_peaks.bed', '')}" else if multi_fastqpair
             then "AllCases_" + length(sample_fastqfiles) + "fastqpairs+control/single-end_mode/PEAKS_Annotation/NARROW_peaks"
             + "/" + sub(basename(SE_macs.peakbedfile), "_peaks.bed", "") else sub(basename(
             sample_fastqfiles[0].left), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz", "") + "+control/single-end_mode/PEAKS_Annotation/NARROW_peaks"
@@ -1509,8 +1511,8 @@ workflow peaseq {
         bedfile = SE_all.peakbedfile,
         chromsizes = samtools_faidx.chromsizes,
         summitfile = SE_all.summitsfile,
-        default_location = if defined(results_name) then results_name + "/single-end_mode/PEAKS_Annotation/NARROW_peaks"
-            + "/" + sub(basename(SE_all.peakbedfile), "_peaks.bed", "") else if multi_fastqpair
+        default_location = if defined(results_name) then "~{results_name + '/single-end_mode/PEAKS_Annotation/NARROW_peaks'
+            + '/' + sub(basename(SE_all.peakbedfile), '_peaks.bed', '')}" else if multi_fastqpair
             then "AllCases_" + length(sample_fastqfiles) + "fastqpairs+control/single-end_mode/PEAKS_Annotation/NARROW_peaks"
             + "/" + sub(basename(SE_all.peakbedfile), "_peaks.bed", "") else sub(basename(
             sample_fastqfiles[0].left), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz", "") + "+control/single-end_mode/PEAKS_Annotation/NARROW_peaks"
@@ -1522,8 +1524,8 @@ workflow peaseq {
         bedfile = SE_nomodel.peakbedfile,
         chromsizes = samtools_faidx.chromsizes,
         summitfile = SE_nomodel.summitsfile,
-        default_location = if defined(results_name) then results_name + "/single-end_mode/PEAKS_Annotation/NARROW_peaks"
-            + "/" + sub(basename(SE_nomodel.peakbedfile), "_peaks.bed", "") else if multi_fastqpair
+        default_location = if defined(results_name) then "~{results_name + '/single-end_mode/PEAKS_Annotation/NARROW_peaks'
+            + '/' + sub(basename(SE_nomodel.peakbedfile), '_peaks.bed', '')}" else if multi_fastqpair
             then "AllCases_" + length(sample_fastqfiles) + "fastqpairs+control/single-end_mode/PEAKS_Annotation/NARROW_peaks"
             + "/" + sub(basename(SE_nomodel.peakbedfile), "_peaks.bed", "") else sub(
             basename(sample_fastqfiles[0].left), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz", ""
@@ -1538,7 +1540,7 @@ workflow peaseq {
             SE_string_ctrlwig,
         ]),
         chromsizes = samtools_faidx.chromsizes,
-        default_location = if defined(results_name) then results_name + "/single-end_mode/PEAKS_Annotation/BROAD_peaks"
+        default_location = if defined(results_name) then "~{results_name + '/single-end_mode/PEAKS_Annotation/BROAD_peaks'}"
             else if multi_fastqpair then "AllCases_" + length(sample_fastqfiles) + "fastqpairs+control/single-end_mode/PEAKS_Annotation/BROAD_peaks"
             else sub(basename(sample_fastqfiles[0].left), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz",
             "") + "+control/single-end_mode/PEAKS_Annotation/BROAD_peaks",
@@ -1551,7 +1553,7 @@ workflow peaseq {
             reference_index = samtools_faidx.faidx_file,
             bedfile = SE_macs.peakbedfile,
             motif_databases = motif_databases,
-            default_location = if defined(results_name) then results_name + "/single-end_mode/MOTIFS"
+            default_location = if defined(results_name) then "~{results_name + '/single-end_mode/MOTIFS'}"
                 else if multi_fastqpair then "AllCases_" + length(sample_fastqfiles) + "fastqpairs+control/single-end_mode/MOTIFS"
                 else sub(basename(sample_fastqfiles[0].left), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz",
                 "") + "+control/single-end_mode/MOTIFS",
@@ -1559,7 +1561,7 @@ workflow peaseq {
 
         call util.flankbed as SE_flankbed { input:
             bedfile = SE_macs.summitsfile,
-            default_location = if defined(results_name) then results_name + "/single-end_mode/MOTIFS"
+            default_location = if defined(results_name) then "~{results_name + '/single-end_mode/MOTIFS'}"
                 else if multi_fastqpair then "AllCases_" + length(sample_fastqfiles) + "fastqpairs+control/single-end_mode/MOTIFS"
                 else sub(basename(sample_fastqfiles[0].left), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz",
                 "") + "+control/single-end_mode/MOTIFS",
@@ -1570,7 +1572,7 @@ workflow peaseq {
             reference_index = samtools_faidx.faidx_file,
             bedfile = SE_flankbed.flankbedfile,
             motif_databases = motif_databases,
-            default_location = if defined(results_name) then results_name + "/single-end_mode/MOTIFS"
+            default_location = if defined(results_name) then "~{results_name + '/single-end_mode/MOTIFS'}"
                 else if multi_fastqpair then "AllCases_" + length(sample_fastqfiles) + "fastqpairs+control/single-end_mode/MOTIFS"
                 else sub(basename(sample_fastqfiles[0].left), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz",
                 "") + "+control/single-end_mode/MOTIFS",
@@ -1581,8 +1583,8 @@ workflow peaseq {
         wigfile = SE_macs.wigfile,
         chromsizes = samtools_faidx.chromsizes,
         xlsfile = SE_macs.peakxlsfile,
-        default_location = if defined(results_name) then results_name + "/single-end_mode/COVERAGE_files/NARROW_peaks"
-            + "/" + sub(basename(SE_macs.peakbedfile), "_peaks.bed", "") else if multi_fastqpair
+        default_location = if defined(results_name) then "~{results_name + '/single-end_mode/COVERAGE_files/NARROW_peaks'
+            + '/' + sub(basename(SE_macs.peakbedfile), '_peaks.bed', '')}" else if multi_fastqpair
             then "AllCases_" + length(sample_fastqfiles) + "fastqpairs+control/single-end_mode/COVERAGE_files/NARROW_peaks"
             + "/" + sub(basename(SE_macs.peakbedfile), "_peaks.bed", "") else sub(basename(
             sample_fastqfiles[0].left), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz", "") + "+control/single-end_mode/COVERAGE_files/NARROW_peaks"
@@ -1593,8 +1595,8 @@ workflow peaseq {
         wigfile = SE_all.wigfile,
         chromsizes = samtools_faidx.chromsizes,
         xlsfile = SE_all.peakxlsfile,
-        default_location = if defined(results_name) then results_name + "/single-end_mode/COVERAGE_files/NARROW_peaks"
-            + "/" + sub(basename(SE_all.peakbedfile), "_peaks.bed", "") else if multi_fastqpair
+        default_location = if defined(results_name) then "~{results_name + '/single-end_mode/COVERAGE_files/NARROW_peaks'
+            + '/' + sub(basename(SE_all.peakbedfile), '_peaks.bed', '')}" else if multi_fastqpair
             then "AllCases_" + length(sample_fastqfiles) + "fastqpairs+control/single-end_mode/COVERAGE_files/NARROW_peaks"
             + "/" + sub(basename(SE_all.peakbedfile), "_peaks.bed", "") else sub(basename(
             sample_fastqfiles[0].left), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz", "") + "+control/single-end_mode/COVERAGE_files/NARROW_peaks"
@@ -1605,8 +1607,8 @@ workflow peaseq {
         wigfile = SE_nomodel.wigfile,
         chromsizes = samtools_faidx.chromsizes,
         xlsfile = SE_nomodel.peakxlsfile,
-        default_location = if defined(results_name) then results_name + "/single-end_mode/COVERAGE_files/NARROW_peaks"
-            + "/" + sub(basename(SE_nomodel.peakbedfile), "_peaks.bed", "") else if multi_fastqpair
+        default_location = if defined(results_name) then "~{results_name + '/single-end_mode/COVERAGE_files/NARROW_peaks'
+            + '/' + sub(basename(SE_nomodel.peakbedfile), '_peaks.bed', '')}" else if multi_fastqpair
             then "AllCases_" + length(sample_fastqfiles) + "fastqpairs+control/single-end_mode/COVERAGE_files/NARROW_peaks"
             + "/" + sub(basename(SE_nomodel.peakbedfile), "_peaks.bed", "") else sub(
             basename(sample_fastqfiles[0].left), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz", ""
@@ -1617,7 +1619,7 @@ workflow peaseq {
     call viz.visualization as SE_vizsicer { input:
         wigfile = SE_sicer.wigfile,
         chromsizes = samtools_faidx.chromsizes,
-        default_location = if defined(results_name) then results_name + "/single-end_mode/COVERAGE_files/BROAD_peaks"
+        default_location = if defined(results_name) then "~{results_name + '/single-end_mode/COVERAGE_files/BROAD_peaks'}"
             else if multi_fastqpair then "AllCases_" + length(sample_fastqfiles) + "fastqpairs+control/single-end_mode/COVERAGE_files/BROAD_peaks"
             else sub(basename(sample_fastqfiles[0].left), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz",
             "") + "+control/single-end_mode/COVERAGE_files/BROAD_peaks",
@@ -1724,19 +1726,19 @@ workflow peaseq {
         pvalue = "1e-9",
         keep_dup = "auto",
         egs = egs.genomesize,
-        output_name = if defined(results_name) then results_name + "-p9_kd-auto" else basename(
+        output_name = if defined(results_name) then "~{results_name + '-p9_kd-auto'}" else basename(
             PE_sample_bam, ".bam") + "+control-p9_kd-auto",
-        default_location = if defined(results_name) then results_name + "/PEAKS/NARROW_peaks/"
-            + results_name + "-p9_kd-auto" else sub(basename(PE_sample_bam), ".sorted.b.*$",
+        default_location = if defined(results_name) then "~{results_name + '/PEAKS/NARROW_peaks/'
+            + results_name + '-p9_kd-auto'}" else sub(basename(PE_sample_bam), ".sorted.b.*$",
             "") + "+control/PEAKS/NARROW_peaks" + "/" + basename(PE_sample_bam, ".bam") + "+control-p9_kd-auto",
-        coverage_location = if defined(results_name) then results_name + "/COVERAGE_files/NARROW_peaks/"
-            + results_name + "-p9_kd-auto" else sub(basename(PE_sample_bam), ".sorted.b.*$",
+        coverage_location = if defined(results_name) then "~{results_name + '/COVERAGE_files/NARROW_peaks/'
+            + results_name + '-p9_kd-auto'}" else sub(basename(PE_sample_bam), ".sorted.b.*$",
             "") + "+control/COVERAGE_files/NARROW_peaks" + "/" + basename(PE_sample_bam, ".bam"
             ) + "+control-p9_kd-auto",
     }
 
     call util.addreadme as PE_addreadme { input: default_location = if defined(
-        results_name) then results_name + "/PEAKS" else sub(basename(PE_sample_bam), ".sorted.b.*$",
+        results_name) then "~{results_name + '/PEAKS'}" else sub(basename(PE_sample_bam), ".sorted.b.*$",
         "") + "+control/PEAKS" }
 
     call macs.macs as PE_all { input:
@@ -1745,15 +1747,14 @@ workflow peaseq {
         pvalue = "1e-9",
         keep_dup = "all",
         egs = egs.genomesize,
-        output_name = if defined(results_name) then results_name + "-p9_kd-all" else basename(
+        output_name = if defined(results_name) then "~{results_name + '-p9_kd-all'}" else basename(
             PE_sample_bam, ".bam") + "+control-p9_kd-all",
-        default_location = if defined(results_name) then results_name + "/PEAKS/NARROW_peaks/"
-            + results_name + "-p9_kd-all" else sub(basename(PE_sample_bam), ".sorted.b.*$",
+        default_location = if defined(results_name) then "~{results_name + '/PEAKS/NARROW_peaks/'
+            + results_name + '-p9_kd-all'}" else sub(basename(PE_sample_bam), ".sorted.b.*$",
             "") + "+control/PEAKS/NARROW_peaks" + "/" + basename(PE_sample_bam, ".bam") + "+control-p9_kd-all",
-        coverage_location = if defined(results_name) then results_name + "/COVERAGE_files/NARROW_peaks/"
-            + results_name + "-p9_kd-all" else sub(basename(PE_sample_bam), ".sorted.b.*$",
-            "") + "+control/COVERAGE_files/NARROW_peaks" + "/" + basename(PE_sample_bam, ".bam"
-            ) + "+control-p9_kd-all",
+        coverage_location = if defined(results_name) then "~{results_name + '/COVERAGE_files/NARROW_peaks/'
+            + results_name + '-p9_kd-all'}" else sub(basename(PE_sample_bam), ".sorted.b.*$", "") + "+control/COVERAGE_files/NARROW_peaks"
+            + "/" + basename(PE_sample_bam, ".bam") + "+control-p9_kd-all",
     }
 
     call macs.macs as PE_nomodel { input:
@@ -1761,13 +1762,13 @@ workflow peaseq {
         control = PE_control_bam,
         nomodel = true,
         egs = egs.genomesize,
-        output_name = if defined(results_name) then results_name + "-nm" else basename(
+        output_name = if defined(results_name) then "~{results_name + '-nm'}" else basename(
             PE_sample_bam, ".bam") + "+control-nm",
-        default_location = if defined(results_name) then results_name + "/PEAKS/NARROW_peaks/"
-            + results_name + "-nm" else sub(basename(PE_sample_bam), ".sorted.b.*$", "") + "+control/PEAKS/NARROW_peaks"
+        default_location = if defined(results_name) then "~{results_name + '/PEAKS/NARROW_peaks/'
+            + results_name + '-nm'}" else sub(basename(PE_sample_bam), ".sorted.b.*$", "") + "+control/PEAKS/NARROW_peaks"
             + "/" + basename(PE_sample_bam, ".bam") + "+control-nm",
-        coverage_location = if defined(results_name) then results_name + "/COVERAGE_files/NARROW_peaks/"
-            + results_name + "-nm" else sub(basename(PE_sample_bam), ".sorted.b.*$", "") + "+control/COVERAGE_files/NARROW_peaks"
+        coverage_location = if defined(results_name) then "~{results_name + '/COVERAGE_files/NARROW_peaks/'
+            + results_name + '-nm'}" else sub(basename(PE_sample_bam), ".sorted.b.*$", "") + "+control/COVERAGE_files/NARROW_peaks"
             + "/" + basename(PE_sample_bam, ".bam") + "+control-nm",
     }
 
@@ -1814,9 +1815,9 @@ workflow peaseq {
         bamindex = s_frag_index.indexbam,
         control_bamfile = c_fraggraph.fragbamfile,
         control_bamindex = c_frag_index.indexbam,
-        samplename = if defined(results_name) then results_name else basename(
+        samplename = if defined(results_name) then "~{results_name}" else basename(
             PE_sample_bam, ".bam") + "+control",
-        default_location = if defined(results_name) then results_name + "/BAM_Density"
+        default_location = if defined(results_name) then "~{results_name + '/BAM_Density'}"
             else sub(basename(PE_sample_bam), ".sorted.b.*$", "") + "+control/BAM_Density",
     }
 
@@ -1827,11 +1828,11 @@ workflow peaseq {
         gap_size = 600,
         chromsizes = samtools_faidx.chromsizes,
         genome_fraction = egs.genomefraction,
-        outputname = if defined(results_name) then results_name else basename(s_fraggraph.bedpefile,
+        outputname = if defined(results_name) then "~{results_name}" else basename(s_fraggraph.bedpefile,
             ".bed") + "+control",
-        default_location = if defined(results_name) then results_name + "/PEAKS/BROAD_peaks"
+        default_location = if defined(results_name) then "~{results_name + '/PEAKS/BROAD_peaks'}"
             else sub(basename(PE_sample_bam), ".sorted.b.*$", "") + "+control/PEAKS/BROAD_peaks",
-        coverage_location = if defined(results_name) then results_name + "/PEAKS/BROAD_peaks"
+        coverage_location = if defined(results_name) then "~{results_name + '/PEAKS/BROAD_peaks'}"
             else sub(basename(PE_sample_bam), ".sorted.b.*$", "") + "+control/COVERAGE_files/BROAD_peaks",
     }
 
@@ -1843,7 +1844,7 @@ workflow peaseq {
         controlindex = c_frag_index.indexbam,
         bedfile_auto = PE_macs.peakbedfile,
         bedfile_all = PE_all.peakbedfile,
-        default_location = if defined(results_name) then results_name + "/PEAKS/STITCHED_peaks"
+        default_location = if defined(results_name) then "~{results_name + '/PEAKS/STITCHED_peaks'}"
             else sub(basename(PE_sample_bam), ".sorted.b.*$", "") + "+control/PEAKS/STITCHED_peaks",
     }
 
@@ -1865,8 +1866,8 @@ workflow peaseq {
         chromsizes = samtools_faidx.chromsizes,
         control = true,
         xlsfile = PE_macs.peakxlsfile,
-        default_location = if defined(results_name) then results_name + "/COVERAGE_files/NARROW_peaks/"
-            + sub(basename(PE_macs.peakbedfile), "_peaks.bed", "") + "/control" else sub(
+        default_location = if defined(results_name) then "~{results_name + "/COVERAGE_files/NARROW_peaks/"
+            + sub(basename(PE_macs.peakbedfile), '_peaks.bed', '') + '/control'}" else sub(
             basename(PE_sample_bam), ".sorted.b.*$", "") + "+control/COVERAGE_files/NARROW_peaks/"
             + sub(basename(PE_macs.peakbedfile), "_peaks.bed", "") + "/control",
     }
@@ -1879,8 +1880,8 @@ workflow peaseq {
         chromsizes = samtools_faidx.chromsizes,
         control = true,
         xlsfile = PE_all.peakxlsfile,
-        default_location = if defined(results_name) then results_name + "/COVERAGE_files/NARROW_peaks/"
-            + sub(basename(PE_all.peakbedfile), "_peaks.bed", "") + "/control" else sub(
+        default_location = if defined(results_name) then "~{results_name + '/COVERAGE_files/NARROW_peaks/'
+            + sub(basename(PE_all.peakbedfile), '_peaks.bed', '') + '/control'}" else sub(
             basename(PE_sample_bam), ".sorted.b.*$", "") + "+control/COVERAGE_files/NARROW_peaks/"
             + sub(basename(PE_all.peakbedfile), "_peaks.bed", "") + "/control",
     }
@@ -1892,10 +1893,10 @@ workflow peaseq {
         chromsizes = samtools_faidx.chromsizes,
         control = true,
         xlsfile = PE_nomodel.peakxlsfile,
-        default_location = if defined(results_name) then results_name + "/COVERAGE_files/NARROW_peaks/"
-            + sub(basename(PE_nomodel.peakbedfile), "_peaks.bed", "") + "/control" else sub(
-            basename(PE_sample_bam), ".sorted.b.*$", "") + "+control/COVERAGE_files/NARROW_peaks/"
-            + sub(basename(PE_nomodel.peakbedfile), "_peaks.bed", "") + "/control",
+        default_location = if defined(results_name) then "~{results_name + '/COVERAGE_files/NARROW_peaks/'
+            + sub(basename(PE_nomodel.peakbedfile), '_peaks.bed', '') + '/control'}" else sub(
+            basename(PE_sample_bam), '.sorted.b.*$', '') + '+control/COVERAGE_files/NARROW_peaks/'
+            + sub(basename(PE_nomodel.peakbedfile), "_peaks.bed", "") + '/control',
     }
 
     call util.peaksanno as PE_peaksanno { input:
@@ -1903,8 +1904,8 @@ workflow peaseq {
         bedfile = PE_macs.peakbedfile,
         chromsizes = samtools_faidx.chromsizes,
         summitfile = PE_macs.summitsfile,
-        default_location = if defined(results_name) then results_name + "/PEAKS_Annotation/NARROW_peaks/"
-            + sub(basename(PE_macs.peakbedfile), "_peaks.bed", "") else sub(basename(
+        default_location = if defined(results_name) then "~{results_name + '/PEAKS_Annotation/NARROW_peaks/'
+            + sub(basename(PE_macs.peakbedfile), '_peaks.bed', '')}" else sub(basename(
             PE_sample_bam), ".sorted.b.*$", "") + "+control/PEAKS_Annotation/NARROW_peaks/"
             + sub(basename(PE_macs.peakbedfile), "_peaks.bed", ""),
     }
@@ -1914,7 +1915,7 @@ workflow peaseq {
         bedfile = PE_all.peakbedfile,
         chromsizes = samtools_faidx.chromsizes,
         summitfile = PE_all.summitsfile,
-        default_location = if defined(results_name) then results_name + "/PEAKS_Annotation/NARROW_peaks/"
+        default_location = if defined(results_name) then "~{results_name + '/PEAKS_Annotation/NARROW_peaks/'}"
             + sub(basename(PE_all.peakbedfile), "_peaks.bed", "") else sub(basename(
             PE_sample_bam), ".sorted.b.*$", "") + "+control/PEAKS_Annotation/NARROW_peaks/"
             + sub(basename(PE_all.peakbedfile), "_peaks.bed", ""),
@@ -1925,7 +1926,7 @@ workflow peaseq {
         bedfile = PE_nomodel.peakbedfile,
         chromsizes = samtools_faidx.chromsizes,
         summitfile = PE_nomodel.summitsfile,
-        default_location = if defined(results_name) then results_name + "/PEAKS_Annotation/NARROW_peaks/"
+        default_location = if defined(results_name) then "~{results_name + '/PEAKS_Annotation/NARROW_peaks/'}"
             + sub(basename(PE_nomodel.peakbedfile), "_peaks.bed", "") else sub(basename(
             PE_sample_bam), ".sorted.b.*$", "") + "+control/PEAKS_Annotation/NARROW_peaks/"
             + sub(basename(PE_nomodel.peakbedfile), "_peaks.bed", ""),
@@ -1938,7 +1939,7 @@ workflow peaseq {
             string_ctrlwig,
         ]),
         chromsizes = samtools_faidx.chromsizes,
-        default_location = if defined(results_name) then results_name + "/PEAKS_Annotation/BROAD_peaks"
+        default_location = if defined(results_name) then "~{results_name + '/PEAKS_Annotation/BROAD_peaks'}"
             else sub(basename(PE_sample_bam), ".sorted.b.*$", "") + "+control/PEAKS_Annotation/BROAD_peaks",
     }
 
@@ -1949,13 +1950,13 @@ workflow peaseq {
             reference_index = samtools_faidx.faidx_file,
             bedfile = PE_macs.peakbedfile,
             motif_databases = motif_databases,
-            default_location = if defined(results_name) then results_name + "/MOTIFS" else sub(
+            default_location = if defined(results_name) then "~{results_name + '/MOTIFS'}" else sub(
                 basename(PE_sample_bam), ".sorted.b.*$", "") + "+control/MOTIFS",
         }
 
         call util.flankbed as PE_flankbed { input:
             bedfile = PE_macs.summitsfile,
-            default_location = if defined(results_name) then results_name + "/MOTIFS" else sub(
+            default_location = if defined(results_name) then "~{results_name + '/MOTIFS'}" else sub(
                 basename(PE_sample_bam), ".sorted.b.*$", "") + "+control/MOTIFS",
         }
 
@@ -1964,7 +1965,7 @@ workflow peaseq {
             reference_index = samtools_faidx.faidx_file,
             bedfile = PE_flankbed.flankbedfile,
             motif_databases = motif_databases,
-            default_location = if defined(results_name) then results_name + "/MOTIFS" else sub(
+            default_location = if defined(results_name) then "~{results_name + '/MOTIFS'}" else sub(
                 basename(PE_sample_bam), ".sorted.b.*$", "") + "+control/MOTIFS",
         }
     }
@@ -1973,8 +1974,8 @@ workflow peaseq {
         wigfile = PE_macs.wigfile,
         chromsizes = samtools_faidx.chromsizes,
         xlsfile = PE_macs.peakxlsfile,
-        default_location = if defined(results_name) then results_name + "/COVERAGE_files/NARROW_peaks/"
-            + sub(basename(PE_macs.peakbedfile), "_peaks.bed", "") else sub(basename(
+        default_location = if defined(results_name) then "~{results_name + '/COVERAGE_files/NARROW_peaks/'
+            + sub(basename(PE_macs.peakbedfile), '_peaks.bed', '')}" else sub(basename(
             PE_sample_bam), ".sorted.b.*$", "") + "+control/COVERAGE_files/NARROW_peaks/"
             + sub(basename(PE_macs.peakbedfile), "_peaks.bed", ""),
     }
@@ -1983,8 +1984,8 @@ workflow peaseq {
         wigfile = PE_all.wigfile,
         chromsizes = samtools_faidx.chromsizes,
         xlsfile = PE_all.peakxlsfile,
-        default_location = if defined(results_name) then results_name + "/COVERAGE_files/NARROW_peaks/"
-            + sub(basename(PE_all.peakbedfile), "_peaks.bed", "") else sub(basename(
+        default_location = if defined(results_name) then "~{results_name + '/COVERAGE_files/NARROW_peaks/'
+            + sub(basename(PE_all.peakbedfile), '_peaks.bed', '')}" else sub(basename(
             PE_sample_bam), ".sorted.b.*$", "") + "+control/COVERAGE_files/NARROW_peaks/"
             + sub(basename(PE_all.peakbedfile), "_peaks.bed", ""),
     }
@@ -1993,8 +1994,8 @@ workflow peaseq {
         wigfile = PE_nomodel.wigfile,
         chromsizes = samtools_faidx.chromsizes,
         xlsfile = PE_nomodel.peakxlsfile,
-        default_location = if defined(results_name) then results_name + "/COVERAGE_files/NARROW_peaks/"
-            + sub(basename(PE_nomodel.peakbedfile), "_peaks.bed", "") else sub(basename(
+        default_location = if defined(results_name) then "~{results_name + '/COVERAGE_files/NARROW_peaks/'
+            + sub(basename(PE_nomodel.peakbedfile), '_peaks.bed', '')}" else sub(basename(
             PE_sample_bam), ".sorted.b.*$", "") + "+control/COVERAGE_files/NARROW_peaks/"
             + sub(basename(PE_nomodel.peakbedfile), "_peaks.bed", ""),
     }
@@ -2002,7 +2003,7 @@ workflow peaseq {
     call viz.visualization as PE_vizsicer { input:
         wigfile = PE_sicer.wigfile,
         chromsizes = samtools_faidx.chromsizes,
-        default_location = if defined(results_name) then results_name + "/COVERAGE_files/BROAD_peaks"
+        default_location = if defined(results_name) then "~{results_name + '/COVERAGE_files/BROAD_peaks'}"
             else sub(basename(PE_sample_bam), ".sorted.b.*$", "") + "+control/COVERAGE_files/BROAD_peaks",
     }
 
@@ -2150,7 +2151,7 @@ workflow peaseq {
         control_config = SE_c_summarystats.configfile,
         overall_config = merge_SE_summarystats.configfile,
         outputfile = "AllCases_" + length(all_sample_fastqfiles) + "fastqs+control",
-        default_location = if defined(results_name) then results_name + "/single-end_mode/QC/SummaryStats"
+        default_location = if defined(results_name) then "~{results_name + '/single-end_mode/QC/SummaryStats'}"
             else if multi_fastqpair then "AllCases_" + length(sample_fastqfiles) + "fastqpairs+control/single-end_mode/QC/SummaryStats"
             else sub(basename(sample_fastqfiles[0].left), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz",
             "") + "+control/single-end_mode/QC/SummaryStats",
@@ -2166,7 +2167,7 @@ workflow peaseq {
         sampleqc_txt = SE_s_mergehtml.mergetxt,
         overallqc_txt = SE_concatstats.textfile,
         fastq_mode = "PEAseq SEmode",
-        default_location = if defined(results_name) then results_name + "/single-end_mode"
+        default_location = if defined(results_name) then "~{results_name + '/single-end_mode'}"
             else if multi_fastqpair then "AllCases_" + length(sample_fastqfiles) + "fastqpairs+control/single-end_mode"
             else sub(basename(sample_fastqfiles[0].left), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz",
             "") + "+control/single-end_mode",
@@ -2338,9 +2339,9 @@ workflow peaseq {
             PE_all_summarystats.configfile,
             PE_merge_summarystats.configfile,
         ]),
-        outputfile = if defined(results_name) then results_name else "AllCases_" + length(
+        outputfile = if defined(results_name) then "~{results_name}" else "AllCases_" + length(
             sample_fastqfiles) + "fastqpairs+control",
-        default_location = if defined(results_name) then results_name + "/QC/SummaryStats"
+        default_location = if defined(results_name) then "~{results_name + '/QC/SummaryStats'}"
             else if multi_fastqpair then "AllCases_" + length(sample_fastqfiles) + "fastqpairs+control/QC/SummaryStats"
             else sub(basename(sample_fastqfiles[0].left), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz",
             "") + "+control/QC/SummaryStats",
@@ -2373,7 +2374,7 @@ workflow peaseq {
             PE_c_summarystats.textfile,
         ]),
         overallqc_pe_txt = PE_concatstats.textfile,
-        outputfile = if defined(results_name) then results_name + ".peaseq_report.html"
+        outputfile = if defined(results_name) then "~{results_name + '.peaseq_report.html'}"
             else if multi_fastqpair then "AllCases_" + length(sample_fastqfiles) + "fastqpairs+control.peaseq_report.html"
             else sub(basename(sample_fastqfiles[0].left), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz",
             "") + "+control.peaseq_report.html",
