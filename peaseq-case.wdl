@@ -34,27 +34,27 @@ workflow peaseq {
                 {
                     version: "1.0",
                     changes: [
-                        "Initial release",
-                    ],
-                },
-            ],
+                        "Initial release"
+                    ]
+                }
+            ]
         }
         parameter_group: {
             reference_genome: {
                 title: "Reference genome",
                 description: "Genome specific files. e.g. reference FASTA, GTF, blacklist, motif databases, FASTA index, bowtie index .",
-                help: "Input reference genome files as defined. If some genome data are missing then analyses using such data will be skipped.",
+                help: "Input reference genome files as defined. If some genome data are missing then analyses using such data will be skipped."
             },
             input_genomic_data: {
                 title: "Input FASTQ data",
                 description: "Genomic input files for experiment.",
-                help: "Input one or more sample data and/or SRA identifiers.",
+                help: "Input one or more sample data and/or SRA identifiers."
             },
             analysis_parameter: {
                 title: "Analysis parameter",
                 description: "Analysis settings needed for experiment.",
-                help: "Analysis settings; such output analysis file name.",
-            },
+                help: "Analysis settings; such output analysis file name."
+            }
         }
     }
 
@@ -66,8 +66,8 @@ workflow peaseq {
                 "*.fa",
                 "*.fasta",
                 "*.fa.gz",
-                "*.fasta.gz",
-            ],
+                "*.fasta.gz"
+            ]
         }
         blacklist: {
             description: "Blacklist file in BED format",
@@ -75,8 +75,8 @@ workflow peaseq {
             help: "If defined, blacklist regions listed are excluded after reference alignment.",
             patterns: [
                 "*.bed",
-                "*.bed.gz",
-            ],
+                "*.bed.gz"
+            ]
         }
         gtf: {
             description: "gene annotation file (.gtf)",
@@ -88,30 +88,30 @@ workflow peaseq {
                 "*.gff",
                 "*.gff.gz",
                 "*.gff3",
-                "*.gff3.gz",
-            ],
+                "*.gff3.gz"
+            ]
         }
         bowtie_index: {
             description: "bowtie v1 index files (*.ebwt)",
             group: "reference_genome",
             help: "If not defined, bowtie v1 index files are generated, will take a longer compute time.",
             patterns: [
-                "*.ebwt",
-            ],
+                "*.ebwt"
+            ]
         }
         motif_databases: {
             description: "One or more of the MEME suite motif databases (*.meme)",
             group: "reference_genome",
             help: "Input one or more motif databases available from the MEME suite (https://meme-suite.org/meme/db/motifs).",
             patterns: [
-                "*.meme",
-            ],
+                "*.meme"
+            ]
         }
         sample_sraid: {
             description: "One or more sample SRA (Sequence Read Archive) run identifiers",
             group: "input_genomic_data",
             help: "Input publicly available FASTQs (SRRs). Multiple SRRs are separated by commas (,).",
-            example: "SRR12345678",
+            example: "SRR12345678"
         }
         sample_R1_fastq: {
             description: "One or more sample R1 FASTQs",
@@ -119,8 +119,8 @@ workflow peaseq {
             help: "Upload zipped FASTQ files.",
             patterns: [
                 "*.fq.gz",
-                "*.fastq.gz",
-            ],
+                "*.fastq.gz"
+            ]
         }
         sample_R2_fastq: {
             description: "One or more sample R2 FASTQs",
@@ -128,32 +128,32 @@ workflow peaseq {
             help: "Upload zipped FASTQ files.",
             patterns: [
                 "*.fq.gz",
-                "*.fastq.gz",
-            ],
+                "*.fastq.gz"
+            ]
         }
         results_name: {
             description: "Experiment results custom name",
             group: "analysis_parameter",
             help: "Input preferred analysis results name (recommended if multiple FASTQs are provided).",
-            example: "AllMerge_mapped",
+            example: "AllMerge_mapped"
         }
         run_motifs: {
             description: "Perform Motif Analysis",
             group: "analysis_parameter",
             help: "Setting this means Motif Discovery and Enrichment analysis will be performed.",
-            example: true,
+            example: true
         }
         insertsize: {
             description: "Bowtie v1 maximum insert size (-X/--maxins <int>).",
             group: "analysis_parameter",
             help: "Specify maximum insert size for paired-end alignment (default: 600).",
-            example: 600,
+            example: 600
         }
         strandedness: {
             description: "Bowtie v1 mate orientation (--fr/--rf/--ff).",
             group: "analysis_parameter",
             help: "The upstream/downstream mate orientation for paired-end alignment (default: --fr).",
-            example: "fr",
+            example: "fr"
         }
     }
 
@@ -255,12 +255,10 @@ workflow peaseq {
     ]
     if (!defined(spikein_bowtie_index) && defined(spikein_reference)) {
         # create bowtie index on spikein genome
-        call bowtie.index as spikein_bowtie_idx { input:
-            reference = select_first([
-                spikein_reference,
-                string_spikein,
-            ])
-        }
+        call bowtie.index as spikein_bowtie_idx { input: reference = select_first([
+            spikein_reference,
+            string_spikein,
+        ]) }
     }
 
     #4. Make sure indexes are six else build indexes for Spike-in DNA
@@ -272,12 +270,10 @@ workflow peaseq {
         ])
         if (length(int_spikein_bowtie_index) != 6) {
             # create bowtie index if 6 index files aren't provided
-            call bowtie.index as spikein_bowtie_idx_2 { input:
-                reference = select_first([
-                    spikein_reference,
-                    string_spikein,
-                ])
-            }
+            call bowtie.index as spikein_bowtie_idx_2 { input: reference = select_first([
+                spikein_reference,
+                string_spikein,
+            ]) }
         }
     }
     Array[File] actual_spikein_bowtie_index = select_first([
@@ -311,8 +307,10 @@ workflow peaseq {
 
         # Order FASTQs
         if (length(sample_R1_fastqfile) > 1) {
-            call peaseq_util.sortfiles as R1_sorted { input: fastqfiles = sample_R1_fastqfile }
-            call peaseq_util.sortfiles as R2_sorted { input: fastqfiles = sample_R2_fastqfile }
+            call peaseq_util.sortfiles as R1_sorted { input: fastqfiles = sample_R1_fastqfile
+                }
+            call peaseq_util.sortfiles as R2_sorted { input: fastqfiles = sample_R2_fastqfile
+                }
         }
         Array[File] sample_R1_fastqfiles = select_first([
             R1_sorted.allfiles,
@@ -341,7 +339,8 @@ workflow peaseq {
     ]))
 
     # transpose to paired-end tuples
-    Array[Pair[File, File]] original_sample_fastqfiles = zip(original_sample_R1, original_sample_R2)
+    Array[Pair[File, File]] original_sample_fastqfiles = zip(original_sample_R1, original_sample_R2
+        )
 
     ### ------------------------------------------------- ###
     ### ---------------- S E C T I O N 1 ---------------- ###
@@ -379,17 +378,14 @@ workflow peaseq {
                 insert_size = insertsize,
                 strandedness = strandedness,
                 index_files = actual_spikein_bowtie_index,
-                default_location = if multi_fastqpair then "SAMPLE/" + sub(basename(
-                    fastqpair.left), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz", "") + "/SpikeIn/SummaryStats"
-                    else if defined(results_name) then results_name + "/SpikeIn/SummaryStats"
-                    else sub(basename(fastqpair.left), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz",
-                    "") + "/SpikeIn/SummaryStats",
             }
         }
 
         if (length(original_sample_R1) > 1) {
-            call peaseq_util.sortfiles as spikein_R1_sorted { input: fastqfiles = spikein_indv_map.unaligned_1 }
-            call peaseq_util.sortfiles as spikein_R2_sorted { input: fastqfiles = spikein_indv_map.unaligned_2 }
+            call peaseq_util.sortfiles as spikein_R1_sorted { input: fastqfiles = spikein_indv_map.unaligned_1
+                }
+            call peaseq_util.sortfiles as spikein_R2_sorted { input: fastqfiles = spikein_indv_map.unaligned_2
+                }
         }
 
         Array[File] spikein_sample_R1 = select_first([
