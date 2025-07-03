@@ -17,12 +17,12 @@ workflow evaluatesrr {
         Array[File]? sample_R2_fastq
         String? results_name
         Boolean run_motifs=true
-        Int? insertsize = 600
-        String? strandedness = "fr"
+        Int insertsize = 600
+        String strandedness = "fr"
         Boolean paired=true
     }
     
-    Array[String] string_sra = [1] #buffer to allow for sra_id optionality
+    Array[String] string_sra = ["1"] #buffer to allow for sra_id optionality
     Array[String] s_sraid = select_first([sample_sraid, string_sra])
     scatter (eachsra in s_sraid) {
         call sra.srameta {
@@ -39,7 +39,7 @@ workflow evaluatesrr {
         call ss.seaseq as ss {
             input :
                 reference=reference,
-                spikein_reference=spikein_reference
+                spikein_reference=spikein_reference,
                 blacklist=blacklist,
                 gtf=gtf,
                 bowtie_index=bowtie_index,
@@ -56,7 +56,7 @@ workflow evaluatesrr {
         call ps.peaseq as ps {
             input :
                 reference=reference,
-                spikein_reference=spikein_reference
+                spikein_reference=spikein_reference,
                 blacklist=blacklist,
                 gtf=gtf,
                 bowtie_index=bowtie_index,

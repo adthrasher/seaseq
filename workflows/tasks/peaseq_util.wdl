@@ -164,10 +164,7 @@ task pe_bamtobed {
     input {
         File bamfile
         String outputfile = basename(bamfile) + "2bedpe.bed"
-        Boolean sicer = false
-
         String default_location = "BAM_files"
-
         Int memory_gb = 20
         Int max_retries = 1
         Int ncpu = 1
@@ -324,8 +321,6 @@ task pe_mergehtml {
         String default_location = "QC_files"
         String outputfile = "merged_summary.html"
         String outputtxt = sub(outputfile, '.html', '.txt')
-        Boolean peaseq = false
-
         Int memory_gb = 10
         Int max_retries = 1
         Int ncpu = 1

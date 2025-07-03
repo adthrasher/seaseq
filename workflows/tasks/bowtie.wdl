@@ -86,13 +86,7 @@ task spikein_SE {
         String outputfile = if (defined(prefix)) then select_first([prefix,basename(fastqfile)]) + '.unaligned' else sub(basename(fastqfile),'.fastq.gz|.fq.gz','.unaligned')
         String nameoffile = basename(fastqfile,'.gz')
         Int read_length = 75
-        Int insert_size = 600
         Boolean best_alignments = true
-        String strandedness = 'fr'
-        String stranded_m = if strandedness=='fr' then '--fr'
-                        else if strandedness=='rf' then '--rf'
-                        else if strandedness=='ff' then '--ff'
-                        else '--fr'
         String default_location = "."
         Int additional_memory_gb = 10
         Int max_retries = 1
@@ -144,7 +138,7 @@ task spikein_PE {
         File? metricsfile
         Array[File]+ index_files
         String? prefix
-        String outputfile = if (defined(prefix)) then select_first([prefix,basename(fastqfile)]) + '.unaligned' else if (defined(fastqfile_R2)) then sub(basename(fastqfile),'_R?[12]_....f.*q.gz|_R?[12].f.*q.gz','.unaligned') else sub(basename(fastqfile),'.fastq.gz|.fq.gz','.unaligned')
+        String outputfile = if (defined(prefix)) then select_first([prefix,basename(fastqfile)]) + '.unaligned' else sub(basename(fastqfile),'_R?[12]_....f.*q.gz|_R?[12].f.*q.gz','.unaligned')
         String nameoffile_R1 = basename(fastqfile,'.gz')
         String nameoffile_R2 = basename(fastqfile_R2,'.gz')
         Int read_length = 75
@@ -155,8 +149,6 @@ task spikein_PE {
                         else if strandedness=='rf' then '--rf'
                         else if strandedness=='ff' then '--ff'
                         else '--fr'
-        String default_location = "."
-
         Int additional_memory_gb = 10
         Int max_retries = 1
         Int ncpu = 20

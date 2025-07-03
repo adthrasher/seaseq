@@ -24,7 +24,7 @@ workflow motifs {
     }
 
     if (defined(motif_databases)) {
-        Array[String] string_motif_databases = [1]
+        Array[String] string_motif_databases = ["1"]
         Array[File] motif_database_files = select_first([motif_databases, string_motif_databases])
             
         call ame {

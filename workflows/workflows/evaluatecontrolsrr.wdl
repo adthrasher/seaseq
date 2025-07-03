@@ -20,13 +20,13 @@ workflow evaluatesrr {
         Array[File]? control_R2_fastq
         String? results_name
         Boolean run_motifs=true
-        Int? insertsize = 600
-        String? strandedness = "fr"
+        Int insertsize = 600
+        String strandedness = "fr"
         Boolean paired=true
     }
     
     if ( defined(sample_sraid) ) {
-        Array[String] string_sra = [1] #buffer to allow for sra_id optionality
+        Array[String] string_sra = ["1"] #buffer to allow for sra_id optionality
         Array[String] s_sraid = select_first([sample_sraid, string_sra])
         scatter (eachsra in s_sraid) {
             call sra.srameta {
@@ -37,11 +37,11 @@ workflow evaluatesrr {
                 Boolean? paired_sample=srameta.paired_end
             }
         } # end scatter each sra
-        Boolean paired_sample_m = select_first([paired_sample[0],paired])
     }
+    Boolean paired_sample_m = select_first([paired_sample[0],paired])
 
     if ( defined(control_sraid) ) {
-        Array[String] c_sra = [1] #buffer to allow for sra_id optionality
+        Array[String] c_sra = ["1"] #buffer to allow for sra_id optionality
         Array[String] c_sraid = select_first([control_sraid, c_sra])
         scatter (eachsra in c_sraid) {
             call sra.srameta as c_srameta {
@@ -52,14 +52,14 @@ workflow evaluatesrr {
                 Boolean? paired_control=c_srameta.paired_end
             }
         } # end scatter each sra
-        Boolean paired_control_m = select_first([paired_control[0],paired])
     } # end if control_sra_id
+    Boolean paired_control_m = select_first([paired_control[0],paired])
 
     if (! (paired_control_m && paired_sample_m) ) {
         call sc.seaseq as sc {
             input :
                 reference=reference,
-                spikein_reference=spikein_reference
+                spikein_reference=spikein_reference,
                 blacklist=blacklist,
                 gtf=gtf,
                 bowtie_index=bowtie_index,
@@ -77,7 +77,7 @@ workflow evaluatesrr {
         call pc.peaseq as pc {
             input :
                 reference=reference,
-                spikein_reference=spikein_reference
+                spikein_reference=spikein_reference,
                 blacklist=blacklist,
                 gtf=gtf,
                 bowtie_index=bowtie_index,
