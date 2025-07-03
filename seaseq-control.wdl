@@ -35,27 +35,27 @@ workflow seaseq {
                     changes: [
                         "version of case/sample + control",
                         "single-end sequencing with input/control sequencing data",
-                        "Initial release",
-                    ],
-                },
-            ],
+                        "Initial release"
+                    ]
+                }
+            ]
         }
         parameter_group: {
             reference_genome: {
                 title: "Reference genome",
                 description: "Genome specific files. e.g. reference FASTA, GTF, blacklist, motif databases, FASTA index, bowtie index .",
-                help: "Input reference genome files as defined. If some genome data are missing then analyses using such data will be skipped.",
+                help: "Input reference genome files as defined. If some genome data are missing then analyses using such data will be skipped."
             },
             input_genomic_data: {
                 title: "Input FASTQ data",
                 description: "Genomic input files for experiment.",
-                help: "Input one or more sample data and/or SRA identifiers.",
+                help: "Input one or more sample data and/or SRA identifiers."
             },
             analysis_parameter: {
                 title: "Analysis parameter",
                 description: "Analysis settings needed for experiment.",
-                help: "Analysis settings; such output analysis file name.",
-            },
+                help: "Analysis settings; such output analysis file name."
+            }
         }
     }
 
@@ -67,8 +67,8 @@ workflow seaseq {
                 "*.fa",
                 "*.fasta",
                 "*.fa.gz",
-                "*.fasta.gz",
-            ],
+                "*.fasta.gz"
+            ]
         }
         blacklist: {
             description: "Blacklist file in BED format",
@@ -76,8 +76,8 @@ workflow seaseq {
             help: "If defined, blacklist regions listed are excluded after reference alignment.",
             patterns: [
                 "*.bed",
-                "*.bed.gz",
-            ],
+                "*.bed.gz"
+            ]
         }
         gtf: {
             description: "gene annotation file (.gtf)",
@@ -89,30 +89,30 @@ workflow seaseq {
                 "*.gff",
                 "*.gff.gz",
                 "*.gff3",
-                "*.gff3.gz",
-            ],
+                "*.gff3.gz"
+            ]
         }
         bowtie_index: {
             description: "bowtie v1 index files (*.ebwt)",
             group: "reference_genome",
             help: "If not defined, bowtie v1 index files are generated, will take a longer compute time.",
             patterns: [
-                "*.ebwt",
-            ],
+                "*.ebwt"
+            ]
         }
         motif_databases: {
             description: "One or more of the MEME suite motif databases (*.meme)",
             group: "reference_genome",
             help: "Input one or more motif databases available from the MEME suite (https://meme-suite.org/meme/db/motifs).",
             patterns: [
-                "*.meme",
-            ],
+                "*.meme"
+            ]
         }
         sample_sraid: {
             description: "One or more sample SRA (Sequence Read Archive) run identifiers",
             group: "input_genomic_data",
             help: "Input publicly available FASTQs (SRRs). Multiple SRRs are separated by commas (,).",
-            example: "SRR12345678",
+            example: "SRR12345678"
         }
         sample_fastq: {
             description: "One or more sample FASTQs",
@@ -120,14 +120,14 @@ workflow seaseq {
             help: "Upload zipped FASTQ files.",
             patterns: [
                 "*.fq.gz",
-                "*.fastq.gz",
-            ],
+                "*.fastq.gz"
+            ]
         }
         control_sraid: {
             description: "One or more input/control SRA (Sequence Read Archive) run identifiers",
             group: "input_genomic_data",
             help: "Input publicly available FASTQs (SRRs). Multiple SRRs are separated by commas (,).",
-            example: "SRR12345678",
+            example: "SRR12345678"
         }
         control_fastq: {
             description: "One or more input/control FASTQs",
@@ -137,14 +137,14 @@ workflow seaseq {
                 "*fq",
                 "*.fq.gz",
                 "*.fastq",
-                "*.fastq.gz",
-            ],
+                "*.fastq.gz"
+            ]
         }
         results_name: {
             description: "Experiment results custom name",
             group: "analysis_parameter",
             help: "Input preferred analysis results name.",
-            example: "AllMerge_mapped",
+            example: "AllMerge_mapped"
         }
     }
 
