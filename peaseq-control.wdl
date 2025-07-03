@@ -34,27 +34,27 @@ workflow peaseq {
                 {
                     version: "1.0",
                     changes: [
-                        "Initial release",
-                    ],
-                },
-            ],
+                        "Initial release"
+                    ]
+                }
+            ]
         }
         parameter_group: {
             reference_genome: {
                 title: "Reference genome",
                 description: "Genome specific files. e.g. reference FASTA, GTF, blacklist, motif databases, FASTA index, bowtie index .",
-                help: "Input reference genome files as defined. If some genome data are missing then analyses using such data will be skipped.",
+                help: "Input reference genome files as defined. If some genome data are missing then analyses using such data will be skipped."
             },
             input_genomic_data: {
                 title: "Input FASTQ data",
                 description: "Genomic input files for experiment.",
-                help: "Input one or more sample data and/or SRA identifiers.",
+                help: "Input one or more sample data and/or SRA identifiers."
             },
             analysis_parameter: {
                 title: "Analysis parameter",
                 description: "Analysis settings needed for experiment.",
-                help: "Analysis settings; such output analysis file name.",
-            },
+                help: "Analysis settings; such output analysis file name."
+            }
         }
     }
 
@@ -66,8 +66,8 @@ workflow peaseq {
                 "*.fa",
                 "*.fasta",
                 "*.fa.gz",
-                "*.fasta.gz",
-            ],
+                "*.fasta.gz"
+            ]
         }
         blacklist: {
             description: "Blacklist file in BED format",
@@ -75,8 +75,8 @@ workflow peaseq {
             help: "If defined, blacklist regions listed are excluded after reference alignment.",
             patterns: [
                 "*.bed",
-                "*.bed.gz",
-            ],
+                "*.bed.gz"
+            ]
         }
         gtf: {
             description: "gene annotation file (.gtf)",
@@ -88,30 +88,30 @@ workflow peaseq {
                 "*.gff",
                 "*.gff.gz",
                 "*.gff3",
-                "*.gff3.gz",
-            ],
+                "*.gff3.gz"
+            ]
         }
         bowtie_index: {
             description: "bowtie v1 index files (*.ebwt)",
             group: "reference_genome",
             help: "If not defined, bowtie v1 index files are generated, will take a longer compute time.",
             patterns: [
-                "*.ebwt",
-            ],
+                "*.ebwt"
+            ]
         }
         motif_databases: {
             description: "One or more of the MEME suite motif databases (*.meme)",
             group: "reference_genome",
             help: "Input one or more motif databases available from the MEME suite (https://meme-suite.org/meme/db/motifs).",
             patterns: [
-                "*.meme",
-            ],
+                "*.meme"
+            ]
         }
         sample_sraid: {
             description: "One or more sample SRA (Sequence Read Archive) run identifiers",
             group: "input_genomic_data",
             help: "Input publicly available FASTQs (SRRs). Multiple SRRs are separated by commas (,).",
-            example: "SRR12345678",
+            example: "SRR12345678"
         }
         sample_R1_fastq: {
             description: "One or more sample R1 FASTQs",
@@ -119,8 +119,8 @@ workflow peaseq {
             help: "Upload zipped FASTQ files.",
             patterns: [
                 "*.fq.gz",
-                "*.fastq.gz",
-            ],
+                "*.fastq.gz"
+            ]
         }
         sample_R2_fastq: {
             description: "One or more sample R2 FASTQs",
@@ -128,14 +128,14 @@ workflow peaseq {
             help: "Upload zipped FASTQ files.",
             patterns: [
                 "*.fq.gz",
-                "*.fastq.gz",
-            ],
+                "*.fastq.gz"
+            ]
         }
         control_sraid: {
             description: "One or more input/control SRA (Sequence Read Archive) run identifiers",
             group: "input_genomic_data",
             help: "Input publicly available FASTQs (SRRs). Multiple SRRs are separated by commas (,).",
-            example: "SRR12345678",
+            example: "SRR12345678"
         }
         control_R1_fastq: {
             description: "One or more input/control R1 FASTQs",
@@ -143,8 +143,8 @@ workflow peaseq {
             help: "Upload zipped FASTQ files.",
             patterns: [
                 "*.fq.gz",
-                "*.fastq.gz",
-            ],
+                "*.fastq.gz"
+            ]
         }
         control_R2_fastq: {
             description: "One or more input/control R2 FASTQs",
@@ -152,32 +152,32 @@ workflow peaseq {
             help: "Upload zipped FASTQ files.",
             patterns: [
                 "*.fq.gz",
-                "*.fastq.gz",
-            ],
+                "*.fastq.gz"
+            ]
         }
         results_name: {
             description: "Experiment results custom name",
             group: "analysis_parameter",
             help: "Input preferred analysis results name (recommended if multiple FASTQs are provided).",
-            example: "AllMerge_mapped",
+            example: "AllMerge_mapped"
         }
         run_motifs: {
             description: "Perform Motif Analysis",
             group: "analysis_parameter",
             help: "Setting this means Motif Discovery and Enrichment analysis will be performed.",
-            example: true,
+            example: true
         }
         insertsize: {
             description: "Bowtie v1 maximum insert size (-X/--maxins <int>).",
             group: "analysis_parameter",
             help: "Specify maximum insert size for paired-end alignment (default: 600).",
-            example: 600,
+            example: 600
         }
         strandedness: {
             description: "Bowtie v1 mate orientation (--fr/--rf/--ff).",
             group: "analysis_parameter",
             help: "The upstream/downstream mate orientation for paired-end alignment (default: --fr).",
-            example: "fr",
+            example: "fr"
         }
     }
 
@@ -488,10 +488,6 @@ workflow peaseq {
                 insert_size = insertsize,
                 strandedness = strandedness,
                 index_files = actual_spikein_bowtie_index,
-                default_location = if multi_fastqpair then "SAMPLE/individual_fastqs/" + sub(
-                    basename(fastqpair.left), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz", "") + "/SpikeIn/SummaryStats"
-                    else "SAMPLE/" + sub(basename(fastqpair.left), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz",
-                    "") + "/SpikeIn/SummaryStats",
             }
         }
         scatter (fastqpair in original_control_fastqfiles) {
@@ -509,10 +505,6 @@ workflow peaseq {
                 insert_size = insertsize,
                 strandedness = strandedness,
                 index_files = actual_spikein_bowtie_index,
-                default_location = if multi_control_fastqpair then "CONTROL/individual_fastqs/"
-                    + sub(basename(fastqpair.left), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz",
-                    "") + "/SpikeIn/SummaryStats" else "CONTROL/" + sub(basename(fastqpair.left
-                    ), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz", "") + "/SpikeIn/SummaryStats",
             }
         }
 
@@ -542,16 +534,16 @@ workflow peaseq {
             spikein_c_indv_map.unaligned_2,
         ])
 
-        Array[File] spikein_all_sample_fastqfiles = flatten(select_all([
+        Array[File] spikein_all_sample_fastqfiles = flatten([
             spikein_sample_R1,
             spikein_sample_R2,
-        ]))
+        ])
         Array[Pair[File, File]] spikein_sample_fastqfiles = zip(spikein_sample_R1, spikein_sample_R2
             )
-        Array[File] spikein_all_control_fastqfiles = flatten(select_all([
+        Array[File] spikein_all_control_fastqfiles = flatten([
             spikein_control_R1,
             spikein_control_R2,
-        ]))
+        ])
         Array[Pair[File, File]] spikein_control_fastqfiles = zip(spikein_control_R1, spikein_control_R2
             )
     }
@@ -2394,18 +2386,18 @@ workflow peaseq {
         Array[File?]? spikein_c_metrics_out = spikein_c_indv_map.mapping_output
 
         #FASTQC
-        Array[File?]? indv_s_htmlfile = s_indv_fastqc.htmlfile
-        Array[File?]? indv_s_zipfile = s_indv_fastqc.zipfile
-        Array[File?]? indv_s_bam_htmlfile = indv_s_bamfqc.htmlfile
-        Array[File?]? indv_s_bam_zipfile = indv_s_bamfqc.zipfile
-        File? s_mergebam_htmlfile = SE_s_mergebamfqc.htmlfile
-        File? s_mergebam_zipfile = SE_s_mergebamfqc.zipfile
-        Array[File?]? indv_c_htmlfile = c_indv_fastqc.htmlfile
-        Array[File?]? indv_c_zipfile = c_indv_fastqc.zipfile
-        Array[File?]? indv_c_bam_htmlfile = indv_c_bamfqc.htmlfile
-        Array[File?]? indv_c_bam_zipfile = indv_c_bamfqc.zipfile
-        File? c_mergebam_htmlfile = SE_c_mergebamfqc.htmlfile
-        File? c_mergebam_zipfile = SE_c_mergebamfqc.zipfile
+        Array[File?] indv_s_htmlfile = s_indv_fastqc.htmlfile
+        Array[File?] indv_s_zipfile = s_indv_fastqc.zipfile
+        Array[File?] indv_s_bam_htmlfile = indv_s_bamfqc.htmlfile
+        Array[File?] indv_s_bam_zipfile = indv_s_bamfqc.zipfile
+        File s_mergebam_htmlfile = SE_s_mergebamfqc.htmlfile
+        File s_mergebam_zipfile = SE_s_mergebamfqc.zipfile
+        Array[File?] indv_c_htmlfile = c_indv_fastqc.htmlfile
+        Array[File?] indv_c_zipfile = c_indv_fastqc.zipfile
+        Array[File?] indv_c_bam_htmlfile = indv_c_bamfqc.htmlfile
+        Array[File?] indv_c_bam_zipfile = indv_c_bamfqc.zipfile
+        File c_mergebam_htmlfile = SE_c_mergebamfqc.htmlfile
+        File c_mergebam_zipfile = SE_c_mergebamfqc.zipfile
         Array[File?]? indv_sp_bam_htmlfile = s_indv_PE_bamfqc.htmlfile
         Array[File?]? indv_sp_bam_zipfile = s_indv_PE_bamfqc.zipfile
         File? sp_mergebam_htmlfile = s_PE_mergebamfqc.htmlfile
@@ -2420,22 +2412,22 @@ workflow peaseq {
         File? uno_c_bam_zipfile = c_uno_PE_bamfqc.zipfile
 
         #BASICMETRICS
-        Array[File?]? s_metrics_out = indv_s_bfs.metrics_out
-        Array[File?]? c_metrics_out = indv_c_bfs.metrics_out
+        Array[File?] s_metrics_out = indv_s_bfs.metrics_out
+        Array[File?] c_metrics_out = indv_c_bfs.metrics_out
 
         #BAMFILES
-        Array[File?]? indv_s_sortedbam = indv_s_mapping.sorted_bam
-        Array[File?]? indv_s_indexbam = indv_s_mapping.bam_index
-        Array[File?]? indv_s_bkbam = indv_s_mapping.bklist_bam
-        Array[File?]? indv_s_bkindexbam = indv_s_mapping.bklist_index
-        Array[File?]? indv_s_rmbam = indv_s_mapping.mkdup_bam
-        Array[File?]? indv_s_rmindexbam = indv_s_mapping.mkdup_index
-        Array[File?]? indv_c_sortedbam = indv_c_mapping.sorted_bam
-        Array[File?]? indv_c_indexbam = indv_c_mapping.bam_index
-        Array[File?]? indv_c_bkbam = indv_c_mapping.bklist_bam
-        Array[File?]? indv_c_bkindexbam = indv_c_mapping.bklist_index
-        Array[File?]? indv_c_rmbam = indv_c_mapping.mkdup_bam
-        Array[File?]? indv_c_rmindexbam = indv_c_mapping.mkdup_index
+        Array[File?] indv_s_sortedbam = indv_s_mapping.sorted_bam
+        Array[File?] indv_s_indexbam = indv_s_mapping.bam_index
+        Array[File?] indv_s_bkbam = indv_s_mapping.bklist_bam
+        Array[File?] indv_s_bkindexbam = indv_s_mapping.bklist_index
+        Array[File?] indv_s_rmbam = indv_s_mapping.mkdup_bam
+        Array[File?] indv_s_rmindexbam = indv_s_mapping.mkdup_index
+        Array[File?] indv_c_sortedbam = indv_c_mapping.sorted_bam
+        Array[File?] indv_c_indexbam = indv_c_mapping.bam_index
+        Array[File?] indv_c_bkbam = indv_c_mapping.bklist_bam
+        Array[File?] indv_c_bkindexbam = indv_c_mapping.bklist_index
+        Array[File?] indv_c_rmbam = indv_c_mapping.mkdup_bam
+        Array[File?] indv_c_rmindexbam = indv_c_mapping.mkdup_index
         Array[File?]? indv_sp_sortedbam = s_indv_PE_mapping.sorted_bam
         Array[File?]? indv_sp_indexbam = s_indv_PE_mapping.bam_index
         Array[File?]? indv_sp_bkbam = s_indv_PE_mapping.bklist_bam
@@ -2460,18 +2452,18 @@ workflow peaseq {
         File? uno_c_bkindexbam = c_uno_PE_mapping.bklist_index
         File? uno_c_rmbam = c_uno_PE_mapping.mkdup_bam
         File? uno_c_rmindexbam = c_uno_PE_mapping.mkdup_index
-        File? s_mergebamfile = SE_s_mergebam.mergebam
-        File? s_mergebamindex = SE_s_mergeindexstats.indexbam
+        File s_mergebamfile = SE_s_mergebam.mergebam
+        File s_mergebamindex = SE_s_mergeindexstats.indexbam
         File? s_bkbam = SE_s_merge_rmblklist.intersect_out
         File? s_bkindexbam = SE_s_merge_bklist.indexbam
-        File? s_rmbam = SE_s_merge_markdup.mkdupbam
-        File? s_rmindexbam = SE_s_merge_mkdup.indexbam
-        File? c_mergebamfile = SE_c_mergebam.mergebam
-        File? c_mergebamindex = SE_c_mergeindexstats.indexbam
+        File s_rmbam = SE_s_merge_markdup.mkdupbam
+        File s_rmindexbam = SE_s_merge_mkdup.indexbam
+        File c_mergebamfile = SE_c_mergebam.mergebam
+        File c_mergebamindex = SE_c_mergeindexstats.indexbam
         File? c_bkbam = SE_c_merge_rmblklist.intersect_out
         File? c_bkindexbam = SE_c_merge_bklist.indexbam
-        File? c_rmbam = SE_c_merge_markdup.mkdupbam
-        File? c_rmindexbam = SE_c_merge_mkdup.indexbam
+        File c_rmbam = SE_c_merge_markdup.mkdupbam
+        File c_rmindexbam = SE_c_merge_mkdup.indexbam
         File? sp_mergebamfile = s_PE_mergebam.mergebam
         File? sp_mergebamindex = s_PE_mergeindexstats.indexbam
         File? sp_bkbam = s_PE_merge_rmblklist.pairtobed_out
@@ -2484,52 +2476,52 @@ workflow peaseq {
         File? cp_bkindexbam = c_PE_merge_bklist.indexbam
         File? cp_rmbam = c_PE_merge_markdup.mkdupbam
         File? cp_rmindexbam = c_PE_merge_mkdup.indexbam
-        File? s_fragments_bam = s_fraggraph.fragbamfile
-        File? s_fragments_indexbam = s_frag_index.indexbam
-        File? c_fragments_bam = c_fraggraph.fragbamfile
-        File? c_fragments_indexbam = c_frag_index.indexbam
+        File s_fragments_bam = s_fraggraph.fragbamfile
+        File s_fragments_indexbam = s_frag_index.indexbam
+        File c_fragments_bam = c_fraggraph.fragbamfile
+        File c_fragments_indexbam = c_frag_index.indexbam
 
         #MACS
-        File? peakbedfile = SE_macs.peakbedfile
-        File? peakxlsfile = SE_macs.peakxlsfile
-        File? summitsfile = SE_macs.summitsfile
+        File peakbedfile = SE_macs.peakbedfile
+        File peakxlsfile = SE_macs.peakxlsfile
+        File summitsfile = SE_macs.summitsfile
         File? negativexlsfile = SE_macs.negativepeaks
-        File? wigfile = SE_macs.wigfile
+        File wigfile = SE_macs.wigfile
         File? ctrlwigfile = SE_macs.ctrlwigfile
-        File? all_peakbedfile = SE_all.peakbedfile
-        File? all_peakxlsfile = SE_all.peakxlsfile
-        File? all_summitsfile = SE_all.summitsfile
+        File all_peakbedfile = SE_all.peakbedfile
+        File all_peakxlsfile = SE_all.peakxlsfile
+        File all_summitsfile = SE_all.summitsfile
         File? all_negativexlsfile = SE_all.negativepeaks
-        File? all_wigfile = SE_all.wigfile
+        File all_wigfile = SE_all.wigfile
         File? all_ctrlwigfile = SE_all.ctrlwigfile
-        File? nm_peakbedfile = SE_nomodel.peakbedfile
-        File? nm_peakxlsfile = SE_nomodel.peakxlsfile
-        File? nm_summitsfile = SE_nomodel.summitsfile
+        File nm_peakbedfile = SE_nomodel.peakbedfile
+        File nm_peakxlsfile = SE_nomodel.peakxlsfile
+        File nm_summitsfile = SE_nomodel.summitsfile
         File? nm_negativexlsfile = SE_nomodel.negativepeaks
-        File? nm_wigfile = SE_nomodel.wigfile
+        File nm_wigfile = SE_nomodel.wigfile
         File? nm_ctrlwigfile = SE_nomodel.ctrlwigfile
-        File? readme_peaks = SE_addreadme.readme_peaks
-        File? only_c_peakbedfile = only_c_macs.peakbedfile
-        File? only_c_peakxlsfile = only_c_macs.peakxlsfile
-        File? only_c_summitsfile = only_c_macs.summitsfile
-        File? only_c_wigfile = only_c_macs.wigfile
-        File? only_s_peakbedfile = only_s_macs.peakbedfile
-        File? only_s_peakxlsfile = only_s_macs.peakxlsfile
-        File? only_s_summitsfile = only_s_macs.summitsfile
-        File? only_s_wigfile = only_s_macs.wigfile
-        File? only_cp_peakbedfile = only_c_PE_macs.peakbedfile
-        File? only_cp_peakxlsfile = only_c_PE_macs.peakxlsfile
-        File? only_cp_summitsfile = only_c_PE_macs.summitsfile
-        File? only_cp_wigfile = only_c_PE_macs.wigfile
-        File? only_sp_peakbedfile = only_s_PE_macs.peakbedfile
-        File? only_sp_peakxlsfile = only_s_PE_macs.peakxlsfile
-        File? only_sp_summitsfile = only_s_PE_macs.summitsfile
-        File? only_sp_wigfile = only_s_PE_macs.wigfile
-        File? sp_peakbedfile = PE_macs.peakbedfile
-        File? sp_peakxlsfile = PE_macs.peakxlsfile
-        File? sp_summitsfile = PE_macs.summitsfile
+        File readme_peaks = SE_addreadme.readme_peaks
+        File only_c_peakbedfile = only_c_macs.peakbedfile
+        File only_c_peakxlsfile = only_c_macs.peakxlsfile
+        File only_c_summitsfile = only_c_macs.summitsfile
+        File only_c_wigfile = only_c_macs.wigfile
+        File only_s_peakbedfile = only_s_macs.peakbedfile
+        File only_s_peakxlsfile = only_s_macs.peakxlsfile
+        File only_s_summitsfile = only_s_macs.summitsfile
+        File only_s_wigfile = only_s_macs.wigfile
+        File only_cp_peakbedfile = only_c_PE_macs.peakbedfile
+        File only_cp_peakxlsfile = only_c_PE_macs.peakxlsfile
+        File only_cp_summitsfile = only_c_PE_macs.summitsfile
+        File only_cp_wigfile = only_c_PE_macs.wigfile
+        File only_sp_peakbedfile = only_s_PE_macs.peakbedfile
+        File only_sp_peakxlsfile = only_s_PE_macs.peakxlsfile
+        File only_sp_summitsfile = only_s_PE_macs.summitsfile
+        File only_sp_wigfile = only_s_PE_macs.wigfile
+        File sp_peakbedfile = PE_macs.peakbedfile
+        File sp_peakxlsfile = PE_macs.peakxlsfile
+        File sp_summitsfile = PE_macs.summitsfile
         File? sp_negativexlsfile = PE_macs.negativepeaks
-        File? sp_wigfile = PE_macs.wigfile
+        File sp_wigfile = PE_macs.wigfile
         File? sp_ctrlwigfile = PE_macs.ctrlwigfile
         File? sp_all_peakbedfile = PE_all.peakbedfile
         File? sp_all_peakxlsfile = PE_all.peakxlsfile
