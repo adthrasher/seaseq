@@ -38,7 +38,7 @@ task fraggraph {
 
         #filterbedpe
         awk -F\\t '{
-            if($1==$4 && $1~"chr")
+            if($1!="." && $1==$4)
             { print $1 "\t" $2 "\t" $6 "\t" $7 "\t255\t+" }
             }' ~{sub(basename(bamfile),".bam$", ".ns2bedpe.bedpe")} > ~{bampebed}
 
@@ -184,7 +184,7 @@ task pe_bamtobed {
 
         #sortbed
         awk -F\\t '{
-            if($1==$4 && $1~"chr")
+            if($1!="." && $1==$4)
             { print $1 "\t" $2 "\t" $6 "\t" $7 "\t255\t+" }
             }' ~{sub(basename(bamfile),".bam$", ".ns.bed")} > ~{outputfile}
         #fi
