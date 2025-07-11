@@ -58,8 +58,7 @@ task macs {
         mv ~{output_name}* ~{default_location}
 
         #move coverage files to new location
-        #mv ~{default_location}/~{output_name}_MACS_wiggle/treat/~{output_name}_treat_afterfiting_all.wig.gz ~{
-            coverage_location}
+        #mv ~{default_location}/~{output_name}_MACS_wiggle/treat/~{output_name}_treat_afterfiting_all.wig.gz ~{coverage_location}
         if [ -f "~{control}" ]; then
             mv ~{default_location}/~{output_name}_MACS_wiggle/control/~{output_name}_control_afterfiting_all.wig.gz ~{
             coverage_location}/control/

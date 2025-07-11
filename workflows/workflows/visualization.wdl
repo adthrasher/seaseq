@@ -12,7 +12,7 @@ workflow visualization {
     }
 
     if (defined(xlsfile)) {
-        String string_xlsfile = ""  #buffer to allow optionality
+        String string_xlsfile = ""  # buffer to allow optionality
         File xls_file = select_first([
             xlsfile,
             string_xlsfile,

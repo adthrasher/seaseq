@@ -56,7 +56,7 @@ workflow mapping {
 
     if (defined(blacklist)) {
         # remove blacklist regions
-        String string_blacklist = ""  #buffer to allow for blacklist optionality
+        String string_blacklist = ""  # buffer to allow for blacklist optionality
         File blacklist_file = select_first([
             blacklist,
             string_blacklist,
@@ -71,7 +71,7 @@ workflow mapping {
         }
 
         if (defined(fastqfile_R2)) {
-            String string_fixmate = ""  #buffer to allow for blacklist optionality
+            String string_fixmate = ""  # buffer to allow for blacklist optionality
             File fixmate_file = select_first([
                 viewsort.fixmatebam,
                 string_fixmate,
