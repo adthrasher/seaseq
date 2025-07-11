@@ -1,6 +1,7 @@
 version 1.0
-import "../../seaseq-case.wdl" as ss
+
 import "../../peaseq-case.wdl" as ps
+import "../../seaseq-case.wdl" as ss
 import "../../workflows/tasks/sratoolkit.wdl" as sra
 
 workflow evaluatesrr {
@@ -16,73 +17,79 @@ workflow evaluatesrr {
         Array[File]? sample_R1_fastq
         Array[File]? sample_R2_fastq
         String? results_name
-        Boolean run_motifs=true
+        Boolean run_motifs = true
         Int insertsize = 600
         String strandedness = "fr"
-        Boolean paired=true
+        Boolean paired = true
     }
-    
-    Array[String] string_sra = ["1"] #buffer to allow for sra_id optionality
-    Array[String] s_sraid = select_first([sample_sraid, string_sra])
+
+    Array[String] string_sra = [
+        "1",
+    ]  #buffer to allow for sra_id optionality
+    Array[String] s_sraid = select_first([
+        sample_sraid,
+        string_sra,
+    ])
     scatter (eachsra in s_sraid) {
-        call sra.srameta {
-            input :
-                sra_id=eachsra
+        call sra.srameta { input: sra_id = eachsra }
+        if (!srameta.paired_end) {
+            Boolean? paired_sample = srameta.paired_end
         }
-        if (! srameta.paired_end){
-            Boolean? paired_sample=srameta.paired_end
-        }
-    } # end scatter each sra
-    Boolean paired_sample_m = select_first([paired_sample[0],paired])
+    }  # end scatter each sra
+    Boolean paired_sample_m = select_first([
+        paired_sample[0],
+        paired,
+    ])
 
     if (!paired_sample_m) {
-        call ss.seaseq as ss {
-            input :
-                reference=reference,
-                spikein_reference=spikein_reference,
-                blacklist=blacklist,
-                gtf=gtf,
-                bowtie_index=bowtie_index,
-                spikein_bowtie_index=spikein_bowtie_index,
-                motif_databases=motif_databases,
-                sample_fastq=sample_R1_fastq,
-                sample_sraid=sample_sraid,
-                results_name=results_name,
-                run_motifs=run_motifs
+        call ss.seaseq as ss { input:
+            reference = reference,
+            spikein_reference = spikein_reference,
+            blacklist = blacklist,
+            gtf = gtf,
+            bowtie_index = bowtie_index,
+            spikein_bowtie_index = spikein_bowtie_index,
+            motif_databases = motif_databases,
+            sample_fastq = sample_R1_fastq,
+            sample_sraid = sample_sraid,
+            results_name = results_name,
+            run_motifs = run_motifs,
         }
     }
 
     if (paired_sample_m) {
-        call ps.peaseq as ps {
-            input :
-                reference=reference,
-                spikein_reference=spikein_reference,
-                blacklist=blacklist,
-                gtf=gtf,
-                bowtie_index=bowtie_index,
-                spikein_bowtie_index=spikein_bowtie_index,
-                motif_databases=motif_databases,
-                sample_R1_fastq=sample_R1_fastq,
-                sample_R2_fastq=sample_R2_fastq,
-                sample_sraid=sample_sraid,
-                insertsize=insertsize,
-                strandedness=strandedness,
-                results_name=results_name,
-                run_motifs=run_motifs
+        call ps.peaseq as ps { input:
+            reference = reference,
+            spikein_reference = spikein_reference,
+            blacklist = blacklist,
+            gtf = gtf,
+            bowtie_index = bowtie_index,
+            spikein_bowtie_index = spikein_bowtie_index,
+            motif_databases = motif_databases,
+            sample_R1_fastq = sample_R1_fastq,
+            sample_R2_fastq = sample_R2_fastq,
+            sample_sraid = sample_sraid,
+            insertsize = insertsize,
+            strandedness = strandedness,
+            results_name = results_name,
+            run_motifs = run_motifs,
         }
     }
 
     # Processing OUTPUTs
-
     output {
-        Array[File?]? spikein_indv_s_htmlfile = if paired_sample_m then ps.spikein_indv_s_htmlfile else ss.spikein_indv_s_htmlfile
-        Array[File?]? spikein_indv_s_zipfile = if paired_sample_m then ps.spikein_indv_s_zipfile else ss.spikein_indv_s_zipfile
-        Array[File?]? spikein_s_metrics_out = if paired_sample_m then ps.spikein_s_metrics_out else ss.spikein_s_metrics_out
-                
+        Array[File?]? spikein_indv_s_htmlfile = if paired_sample_m then ps.spikein_indv_s_htmlfile
+            else ss.spikein_indv_s_htmlfile
+        Array[File?]? spikein_indv_s_zipfile = if paired_sample_m then ps.spikein_indv_s_zipfile
+            else ss.spikein_indv_s_zipfile
+        Array[File?]? spikein_s_metrics_out = if paired_sample_m then ps.spikein_s_metrics_out
+            else ss.spikein_s_metrics_out
         Array[File?]? indv_s_htmlfile = if paired_sample_m then ps.indv_s_htmlfile else ss.indv_s_htmlfile
         Array[File?]? indv_s_zipfile = if paired_sample_m then ps.indv_s_zipfile else ss.indv_s_zipfile
-        Array[File?]? indv_s_bam_htmlfile = if paired_sample_m then ps.indv_s_bam_htmlfile else ss.indv_s_bam_htmlfile
-        Array[File?]? indv_s_bam_zipfile = if paired_sample_m then ps.indv_s_bam_zipfile else ss.indv_s_bam_zipfile
+        Array[File?]? indv_s_bam_htmlfile = if paired_sample_m then ps.indv_s_bam_htmlfile
+            else ss.indv_s_bam_htmlfile
+        Array[File?]? indv_s_bam_zipfile = if paired_sample_m then ps.indv_s_bam_zipfile
+            else ss.indv_s_bam_zipfile
         File? s_mergebam_htmlfile = if paired_sample_m then ps.s_mergebam_htmlfile else ss.s_mergebam_htmlfile
         File? s_mergebam_zipfile = if paired_sample_m then ps.s_mergebam_zipfile else ss.s_mergebam_zipfile
         Array[File?]? indv_sp_bam_htmlfile = ps.indv_sp_bam_htmlfile
@@ -98,9 +105,11 @@ workflow evaluatesrr {
         Array[File?]? indv_s_sortedbam = if paired_sample_m then ps.indv_s_sortedbam else ss.indv_s_sortedbam
         Array[File?]? indv_s_indexbam = if paired_sample_m then ps.indv_s_indexbam else ss.indv_s_indexbam
         Array[File?]? indv_s_bkbam = if paired_sample_m then ps.indv_s_bkbam else ss.indv_s_bkbam
-        Array[File?]? indv_s_bkindexbam = if paired_sample_m then ps.indv_s_bkindexbam else ss.indv_s_bkindexbam
+        Array[File?]? indv_s_bkindexbam = if paired_sample_m then ps.indv_s_bkindexbam
+            else ss.indv_s_bkindexbam
         Array[File?]? indv_s_rmbam = if paired_sample_m then ps.indv_s_rmbam else ss.indv_s_rmbam
-        Array[File?]? indv_s_rmindexbam = if paired_sample_m then ps.indv_s_rmindexbam else ss.indv_s_rmindexbam
+        Array[File?]? indv_s_rmindexbam = if paired_sample_m then ps.indv_s_rmindexbam
+            else ss.indv_s_rmindexbam
         Array[File?]? indv_sp_sortedbam = ps.indv_sp_sortedbam
         Array[File?]? indv_sp_indexbam = ps.indv_sp_indexbam
         Array[File?]? indv_sp_bkbam = ps.indv_sp_bkbam
@@ -174,8 +183,10 @@ workflow evaluatesrr {
         File? stitch_enhancers = if paired_sample_m then ps.stitch_enhancers else ss.stitch_enhancers
         File? e_to_g_enhancers = if paired_sample_m then ps.e_to_g_enhancers else ss.e_to_g_enhancers
         File? g_to_e_enhancers = if paired_sample_m then ps.g_to_e_enhancers else ss.g_to_e_enhancers
-        File? e_to_g_super_enhancers = if paired_sample_m then ps.e_to_g_super_enhancers else ss.e_to_g_super_enhancers
-        File? g_to_e_super_enhancers = if paired_sample_m then ps.g_to_e_super_enhancers else ss.g_to_e_super_enhancers
+        File? e_to_g_super_enhancers = if paired_sample_m then ps.e_to_g_super_enhancers
+            else ss.e_to_g_super_enhancers
+        File? g_to_e_super_enhancers = if paired_sample_m then ps.g_to_e_super_enhancers
+            else ss.g_to_e_super_enhancers
         File? sp_pngfile = ps.sp_pngfile
         File? sp_mapped_union = ps.sp_mapped_union
         File? sp_mapped_stitch = ps.sp_mapped_stitch
@@ -245,43 +256,50 @@ workflow evaluatesrr {
         File? all_peak_comparison = if paired_sample_m then ps.all_peak_comparison else ss.all_peak_comparison
         File? all_gene_comparison = if paired_sample_m then ps.all_gene_comparison else ss.all_gene_comparison
         File? all_pdf_comparison = if paired_sample_m then ps.all_pdf_comparison else ss.all_pdf_comparison
-        File? nomodel_peak_promoters = if paired_sample_m then ps.nomodel_peak_promoters else ss.nomodel_peak_promoters
-        File? nomodel_peak_genebody = if paired_sample_m then ps.nomodel_peak_genebody else ss.nomodel_peak_genebody
+        File? nomodel_peak_promoters = if paired_sample_m then ps.nomodel_peak_promoters
+            else ss.nomodel_peak_promoters
+        File? nomodel_peak_genebody = if paired_sample_m then ps.nomodel_peak_genebody
+            else ss.nomodel_peak_genebody
         File? nomodel_peak_window = if paired_sample_m then ps.nomodel_peak_window else ss.nomodel_peak_window
         File? nomodel_peak_closest = if paired_sample_m then ps.nomodel_peak_closest else ss.nomodel_peak_closest
-        File? nomodel_peak_comparison = if paired_sample_m then ps.nomodel_peak_comparison else ss.nomodel_peak_comparison
-        File? nomodel_gene_comparison = if paired_sample_m then ps.nomodel_gene_comparison else ss.nomodel_gene_comparison
-        File? nomodel_pdf_comparison = if paired_sample_m then ps.nomodel_pdf_comparison else ss.nomodel_pdf_comparison
+        File? nomodel_peak_comparison = if paired_sample_m then ps.nomodel_peak_comparison
+            else ss.nomodel_peak_comparison
+        File? nomodel_gene_comparison = if paired_sample_m then ps.nomodel_gene_comparison
+            else ss.nomodel_gene_comparison
+        File? nomodel_pdf_comparison = if paired_sample_m then ps.nomodel_pdf_comparison
+            else ss.nomodel_pdf_comparison
         File? sicer_peak_promoters = if paired_sample_m then ps.sicer_peak_promoters else ss.sicer_peak_promoters
         File? sicer_peak_genebody = if paired_sample_m then ps.sicer_peak_genebody else ss.sicer_peak_genebody
         File? sicer_peak_window = if paired_sample_m then ps.sicer_peak_window else ss.sicer_peak_window
         File? sicer_peak_closest = if paired_sample_m then ps.sicer_peak_closest else ss.sicer_peak_closest
-        File? sicer_peak_comparison = if paired_sample_m then ps.sicer_peak_comparison else ss.sicer_peak_comparison
-        File? sicer_gene_comparison = if paired_sample_m then ps.sicer_gene_comparison else ss.sicer_gene_comparison
+        File? sicer_peak_comparison = if paired_sample_m then ps.sicer_peak_comparison
+            else ss.sicer_peak_comparison
+        File? sicer_gene_comparison = if paired_sample_m then ps.sicer_gene_comparison
+            else ss.sicer_gene_comparison
         File? sicer_pdf_comparison = if paired_sample_m then ps.sicer_pdf_comparison else ss.sicer_pdf_comparison
         File? sp_peak_promoters = ps.sp_peak_promoters
-        File? sp_peak_genebody =  ps.sp_peak_genebody
+        File? sp_peak_genebody = ps.sp_peak_genebody
         File? sp_peak_window = ps.sp_peak_window
         File? sp_peak_closest = ps.sp_peak_closest
         File? sp_peak_comparison = ps.sp_peak_comparison
         File? sp_gene_comparison = ps.sp_gene_comparison
         File? sp_pdf_comparison = ps.sp_pdf_comparison
         File? sp_all_peak_promoters = ps.sp_all_peak_promoters
-        File? sp_all_peak_genebody =  ps.sp_all_peak_genebody
+        File? sp_all_peak_genebody = ps.sp_all_peak_genebody
         File? sp_all_peak_window = ps.sp_all_peak_window
         File? sp_all_peak_closest = ps.sp_all_peak_closest
         File? sp_all_peak_comparison = ps.sp_all_peak_comparison
         File? sp_all_gene_comparison = ps.sp_all_gene_comparison
         File? sp_all_pdf_comparison = ps.sp_all_pdf_comparison
         File? sp_nomodel_peak_promoters = ps.sp_nomodel_peak_promoters
-        File? sp_nomodel_peak_genebody =  ps.sp_nomodel_peak_genebody
+        File? sp_nomodel_peak_genebody = ps.sp_nomodel_peak_genebody
         File? sp_nomodel_peak_window = ps.sp_nomodel_peak_window
         File? sp_nomodel_peak_closest = ps.sp_nomodel_peak_closest
         File? sp_nomodel_peak_comparison = ps.sp_nomodel_peak_comparison
         File? sp_nomodel_gene_comparison = ps.sp_nomodel_gene_comparison
         File? sp_nomodel_pdf_comparison = ps.sp_nomodel_pdf_comparison
         File? sp_sicer_peak_promoters = ps.sp_sicer_peak_promoters
-        File? sp_sicer_peak_genebody =  ps.sp_sicer_peak_genebody
+        File? sp_sicer_peak_genebody = ps.sp_sicer_peak_genebody
         File? sp_sicer_peak_window = ps.sp_sicer_peak_window
         File? sp_sicer_peak_closest = ps.sp_sicer_peak_closest
         File? sp_sicer_peak_comparison = ps.sp_sicer_peak_comparison

@@ -10,53 +10,55 @@ workflow visualization {
         Boolean control = false
         String default_location = "Coverage_files"
     }
-    
-    if ( defined(xlsfile) ) {
-        String string_xlsfile = "" #buffer to allow optionality
-        File xls_file = select_first([xlsfile, string_xlsfile])
-        call util.normalize {
-            input:
-                wigfile=wigfile,
-                control=control,
-                xlsfile=xls_file,
-                default_location=default_location
+
+    if (defined(xlsfile)) {
+        String string_xlsfile = ""  #buffer to allow optionality
+        File xls_file = select_first([
+            xlsfile,
+            string_xlsfile,
+        ])
+        call util.normalize { input:
+            wigfile = wigfile,
+            control = control,
+            xlsfile = xls_file,
+            default_location = default_location,
         }
     }
 
-    File processed_wigfile = select_first([normalize.norm_wig, wigfile])
+    File processed_wigfile = select_first([
+        normalize.norm_wig,
+        wigfile,
+    ])
 
-    call wigtobigwig {
-        input:
-            chromsizes=chromsizes,
-            wigfile=processed_wigfile,
-            default_location=default_location
+    call wigtobigwig { input:
+        chromsizes = chromsizes,
+        wigfile = processed_wigfile,
+        default_location = default_location,
     }
-    call igvtdf {
-        input:
-            wigfile=processed_wigfile,
-            chromsizes=chromsizes,
-            default_location=default_location
+    call igvtdf { input:
+        wigfile = processed_wigfile,
+        chromsizes = chromsizes,
+        default_location = default_location,
     }
-    
+
     output {
         File bigwig = wigtobigwig.bigwig
         File? norm_wig = normalize.norm_wig
         File tdffile = igvtdf.tdffile
     }
-    
 }
+
 task wigtobigwig {
     input {
         File wigfile
         File chromsizes
         String default_location = "Coverage_files"
-
-        String outputfile = sub(basename(wigfile),'.wig.gz', '.bw')
-
+        String outputfile = sub(basename(wigfile), ".wig.gz", ".bw")
         Int memory_gb = 5
         Int max_retries = 1
         Int ncpu = 1
     }
+
     command <<<
         mkdir -p ~{default_location} && cd ~{default_location}
 
@@ -65,15 +67,17 @@ task wigtobigwig {
             ~{wigfile} \
             ~{chromsizes} \
             ~{outputfile}
-    >>> 
+    >>>
+
+    output {
+        File bigwig = "~{default_location}/~{outputfile}"
+    }
+
     runtime {
         memory: ceil(memory_gb * ncpu) + " GB"
         maxRetries: max_retries
-        docker: 'ghcr.io/stjude/abralab/kentutils:latest'
+        docker: "ghcr.io/stjude/abralab/kentutils:latest"
         cpu: ncpu
-    }
-    output {
-        File bigwig = "~{default_location}/~{outputfile}"
     }
 }
 
@@ -82,13 +86,12 @@ task igvtdf {
         File wigfile
         File chromsizes
         String default_location = "Coverage_files"
-
-        String outputfile = sub(basename(wigfile),'.wig.gz', '.tdf')
-
+        String outputfile = sub(basename(wigfile), ".wig.gz", ".tdf")
         Int memory_gb = 5
         Int max_retries = 1
         Int ncpu = 1
     }
+
     command <<<
         mkdir -p ~{default_location} && cd ~{default_location}
         ln -s ~{chromsizes} genome.chrom.sizes
@@ -98,14 +101,16 @@ task igvtdf {
             ~{wigfile} \
             ~{outputfile} \
             genome.chrom.sizes
-    >>> 
+    >>>
+
+    output {
+        File tdffile = "~{default_location}/~{outputfile}"
+    }
+
     runtime {
         memory: ceil(memory_gb * ncpu) + " GB"
         maxRetries: max_retries
-        docker: 'ghcr.io/stjude/abralab/igvtools:v2.8.2'
+        docker: "ghcr.io/stjude/abralab/igvtools:v2.8.2"
         cpu: ncpu
-    }
-    output {
-        File tdffile = "~{default_location}/~{outputfile}"
     }
 }
