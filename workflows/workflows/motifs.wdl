@@ -66,13 +66,13 @@ task meme {
     Int memory_gb = ceil((size(fastafile, "MiB") / 10) + 10)
 
     command <<<
-         mkdir -p ~{default_location} && cd ~{default_location}
+        mkdir -p ~{default_location} && cd ~{default_location}
 
-         meme-chip \
-             ~{true="-spamo-skip" false="" spamo_skip} \
-             ~{true="-fimo-skip" false="" fimo_skip} \
-             -oc ~{outputfolder} \
-             ~{fastafile}
+        meme-chip \
+            ~{true="-spamo-skip" false="" spamo_skip} \
+            ~{true="-fimo-skip" false="" fimo_skip} \
+            -oc ~{outputfolder} \
+            ~{fastafile}
 
         zip -9r ~{outputfolder}.zip ~{outputfolder}
         cp ~{outputfolder}/summary.tsv ~{outputfolder}-summary.tsv
@@ -103,12 +103,12 @@ task ame {
     }
 
     command <<<
-         mkdir -p ~{default_location} && cd ~{default_location}
+        mkdir -p ~{default_location} && cd ~{default_location}
 
-         ame \
-             -oc ./ \
-             ~{fastafile} \
-             ~{sep=" " motif_databases}
+        ame \
+            -oc ./ \
+            ~{fastafile} \
+            ~{sep=" " motif_databases}
 
         gzip sequences.tsv
     >>>
