@@ -656,7 +656,6 @@ workflow peaseq {
             se_txtfiles = indv_summarystats.textfile,
             default_location = "SAMPLE",
             outputfile = "AllSamples-summary-stats.html",
-
         }
 
         call samtools.mergebam as PE_mergebam { input:
