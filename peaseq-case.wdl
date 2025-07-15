@@ -307,10 +307,12 @@ workflow peaseq {
 
         # Order FASTQs
         if (length(sample_R1_fastqfile) > 1) {
-            call peaseq_util.sortfiles as R1_sorted { input: fastqfiles = sample_R1_fastqfile
-                }
-            call peaseq_util.sortfiles as R2_sorted { input: fastqfiles = sample_R2_fastqfile
-                }
+            call peaseq_util.sortfiles as R1_sorted { input:
+                fastqfiles = sample_R1_fastqfile
+            }
+            call peaseq_util.sortfiles as R2_sorted { input:
+                fastqfiles = sample_R2_fastqfile
+            }
         }
         Array[File] sample_R1_fastqfiles = select_first([
             R1_sorted.allfiles,
@@ -339,8 +341,9 @@ workflow peaseq {
     ]))
 
     # transpose to paired-end tuples
-    Array[Pair[File, File]] original_sample_fastqfiles = zip(original_sample_R1, original_sample_R2
-        )
+    Array[Pair[File, File]] original_sample_fastqfiles = zip(
+        original_sample_R1, original_sample_R2
+    )
 
     ### ------------------------------------------------- ###
     ### ---------------- S E C T I O N 1 ---------------- ###
@@ -382,10 +385,12 @@ workflow peaseq {
         }
 
         if (length(original_sample_R1) > 1) {
-            call peaseq_util.sortfiles as spikein_R1_sorted { input: fastqfiles = spikein_indv_map.unaligned_1
-                }
-            call peaseq_util.sortfiles as spikein_R2_sorted { input: fastqfiles = spikein_indv_map.unaligned_2
-                }
+            call peaseq_util.sortfiles as spikein_R1_sorted { input:
+                fastqfiles = spikein_indv_map.unaligned_1
+            }
+            call peaseq_util.sortfiles as spikein_R2_sorted { input:
+                fastqfiles = spikein_indv_map.unaligned_2
+            }
         }
 
         Array[File] spikein_sample_R1 = select_first([
