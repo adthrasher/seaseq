@@ -1,25 +1,25 @@
 version 1.0
+
 # PEAseq create fragments from BAM
 # PEAseq BAM to BED
-
 task fraggraph {
     input {
         File bamfile
         File chromsizes
-        String bigwig = sub(basename(bamfile),".bam$", ".w50.FPM.bw")
-        String wig = sub(basename(bamfile),".bam$", ".w50.FPM.wig")
-        String tdf = sub(basename(bamfile),".bam$", ".w50.FPM.tdf")
-        String fragbam = sub(basename(bamfile),".bam$", ".frag.bam")
-        String bampebed = sub(basename(bamfile),".bam$", ".bam2bedpe.bed")
-        String fragsizes = sub(basename(bamfile),".bam$", ".fragments.png")
+        String bigwig = sub(basename(bamfile), ".bam$", ".w50.FPM.bw")
+        String wig = sub(basename(bamfile), ".bam$", ".w50.FPM.wig")
+        String tdf = sub(basename(bamfile), ".bam$", ".w50.FPM.tdf")
+        String fragbam = sub(basename(bamfile), ".bam$", ".frag.bam")
+        String bampebed = sub(basename(bamfile), ".bam$", ".bam2bedpe.bed")
+        String fragsizes = sub(basename(bamfile), ".bam$", ".fragments.png")
         String default_location = "BAM_files"
         String bam_location = "BAM_files"
         String annotation_location = "Annotation"
-
         Int memory_gb = 75
         Int max_retries = 1
         Int ncpu = 1
     }
+
     command <<<
         cwd=$(pwd)
         mkdir -p ~{default_location} ~{bam_location} ~{annotation_location}
@@ -29,18 +29,18 @@ task fraggraph {
         #namesort
         samtools sort -n -t ps \
             ~{bamfile} \
-            -o ~{sub(basename(bamfile),".bam$", ".ns.bam")}
+            -o ~{sub(basename(bamfile), ".bam$", ".ns.bam")}
 
         #bamtobed
         bamToBed -bedpe \
-            -i ~{sub(basename(bamfile),".bam$", ".ns.bam")} \
-            > ~{sub(basename(bamfile),".bam$", ".ns2bedpe.bedpe")}
+            -i ~{sub(basename(bamfile), ".bam$", ".ns.bam")} \
+            > ~{sub(basename(bamfile), ".bam$", ".ns2bedpe.bedpe")}
 
         #filterbedpe
-        awk -F\\t '{
+        awk -F\t '{
             if($1!="." && $1==$4)
             { print $1 "\t" $2 "\t" $6 "\t" $7 "\t255\t+" }
-            }' ~{sub(basename(bamfile),".bam$", ".ns2bedpe.bedpe")} > ~{bampebed}
+            }' ~{sub(basename(bamfile), ".bam$", ".ns2bedpe.bedpe")} > ~{bampebed}
 
         #fragmentsgraph
         python3 <<CODE
@@ -88,7 +88,7 @@ task fraggraph {
         ax.annotate(nobs_max, xy = (maximum,0), xytext=(maximum,0.1), bbox=bbox, arrowprops=arrowprops, size='small', weight='semibold', ha='right')
 
         ax.set_xlabel("Fragments sizes (bp)")
-        ax.set_title("~{sub(basename(bamfile),".sorted.*$", "")}",size='larger',weight='bold')
+        ax.set_title("~{sub(basename(bamfile), ".sorted.*$", "")}",size='larger',weight='bold')
 
         plt.tick_params(left = False)
         plt.savefig("~{fragsizes}")
@@ -99,17 +99,17 @@ task fraggraph {
         bedtools makewindows -w 50 \
             -g ~{chromsizes} \
             | sort -k1,1 -k2,2n \
-            > ~{sub(basename(chromsizes),".tab", "-50bpwindows.bed")}
+            > ~{sub(basename(chromsizes), ".tab", "-50bpwindows.bed")}
 
         #bedtobam
         bedToBam \
             -i ~{bampebed} \
             -g ~{chromsizes} \
-            > ~{sub(basename(bamfile),".bam$", ".bam2bedpe.bam")}
+            > ~{sub(basename(bamfile), ".bam$", ".bam2bedpe.bam")}
 
         #position sort
         samtools sort \
-            ~{sub(basename(bamfile),".bam$", ".bam2bedpe.bam")} \
+            ~{sub(basename(bamfile), ".bam$", ".bam2bedpe.bam")} \
             -o ~{fragbam}
 
         #view fragments
@@ -117,14 +117,14 @@ task fraggraph {
 
         #create bedgraph
         intersectBed -c \
-            -a ~{sub(basename(chromsizes),".tab", "-50bpwindows.bed")} \
+            -a ~{sub(basename(chromsizes), ".tab", "-50bpwindows.bed")} \
             -b ~{bampebed} \
             | awk -F'[\t]' -v mapped=$mappedPE '{print $1 "\t" $2 "\t" $3 "\t" $4*1000000/mapped}' \
-            > ~{sub(basename(bamfile),".bam$", ".w50.FPM.graph")}
+            > ~{sub(basename(bamfile), ".bam$", ".w50.FPM.graph")}
 
         #create bigwig and tdf
         bedGraphToBigWig \
-            ~{sub(basename(bamfile),".bam$", ".w50.FPM.graph")} \
+            ~{sub(basename(bamfile), ".bam$", ".w50.FPM.graph")} \
             ~{chromsizes} \
             ~{bigwig}
 
@@ -144,12 +144,7 @@ task fraggraph {
         mv ~{fragbam} $cwd/~{bam_location}
         mv ~{fragsizes} $cwd/~{annotation_location}
     >>>
-    runtime {
-        memory: ceil(memory_gb * ncpu) + " GB"
-        maxRetries: max_retries
-        docker: 'ghcr.io/stjude/seaseq/data_processing:v1.0.0'
-        cpu: ncpu
-    }
+
     output {
         File bigwigfile = "~{default_location}/~{bigwig}"
         File tdffile = "~{default_location}/~{tdf}"
@@ -157,6 +152,13 @@ task fraggraph {
         File fragbamfile = "~{bam_location}/~{fragbam}"
         File bedpefile = "~{default_location}/~{bampebed}"
         File fragsizepng = "~{annotation_location}/~{fragsizes}"
+    }
+
+    runtime {
+        memory: ceil(memory_gb * ncpu) + " GB"
+        maxRetries: max_retries
+        docker: "ghcr.io/stjude/seaseq/data_processing:v1.0.0"
+        cpu: ncpu
     }
 }
 
@@ -169,35 +171,37 @@ task pe_bamtobed {
         Int max_retries = 1
         Int ncpu = 1
     }
+
     command <<<
         mkdir -p ~{default_location} && cd ~{default_location}
 
         #namesort
         samtools sort -n \
             ~{bamfile} \
-            -o ~{sub(basename(bamfile),".bam$", ".ns.bam")}
+            -o ~{sub(basename(bamfile), ".bam$", ".ns.bam")}
 
         #bamtobed
         bamToBed -bedpe \
-            -i ~{sub(basename(bamfile),".bam$", ".ns.bam")} \
-            > ~{sub(basename(bamfile),".bam$", ".ns.bed")}
+            -i ~{sub(basename(bamfile), ".bam$", ".ns.bam")} \
+            > ~{sub(basename(bamfile), ".bam$", ".ns.bed")}
 
         #sortbed
-        awk -F\\t '{
+        awk -F\t '{
             if($1!="." && $1==$4)
             { print $1 "\t" $2 "\t" $6 "\t" $7 "\t255\t+" }
-            }' ~{sub(basename(bamfile),".bam$", ".ns.bed")} > ~{outputfile}
+            }' ~{sub(basename(bamfile), ".bam$", ".ns.bed")} > ~{outputfile}
         #fi
-
     >>>
+
+    output {
+        File bedfile = "~{default_location}/~{outputfile}"
+    }
+
     runtime {
         memory: ceil(memory_gb * ncpu) + " GB"
         maxRetries: max_retries
-        docker: 'ghcr.io/stjude/seaseq/data_processing:v1.0.0'
+        docker: "ghcr.io/stjude/seaseq/data_processing:v1.0.0"
         cpu: ncpu
-    }
-    output {
-        File bedfile = "~{default_location}/~{outputfile}"
     }
 }
 
@@ -215,14 +219,13 @@ task pairedend_summaryreport {
         File? sampleqc_pe_html
         File overallqc_pe_txt
         File overallqc_pe_html
-
         String outputfile = "samples_summary.html"
-        String outputtxt = sub(outputfile, '.html', '.txt')
-
+        String outputtxt = sub(outputfile, ".html", ".txt")
         Int memory_gb = 5
         Int max_retries = 1
         Int ncpu = 1
     }
+
     command <<<
 
         # Printing header
@@ -236,7 +239,8 @@ task pairedend_summaryreport {
             cat ~{sampleqc_se_html} >> ~{outputfile}
             echo -e '</table>' >> ~{outputfile}
 
-            echo -e 'PEAseq Report\nSEAseq Quality Statistics and Evaluation Report\n\nSample FASTQs Quality Results\nIndividual FASTQs' > ~{outputtxt}
+            echo -e 'PEAseq Report\nSEAseq Quality Statistics and Evaluation Report\n\nSample FASTQs Quality Results\nIndividual FASTQs' > ~{
+                outputtxt}
             cat ~{sampleqc_se_txt} >> ~{outputtxt}
 
             if [ -f "~{sampleqc_pe_html}" ]; then
@@ -278,7 +282,8 @@ task pairedend_summaryreport {
         fi
 
         # Printing Overall Quality Reports
-        echo '<h2>Overall Quality Evaluation and Statistics Results</h2><p>' >> ~{outputfile}
+        echo '<h2>Overall Quality Evaluation and Statistics Results</h2><p>' >> ~{
+            outputfile}
         echo '<h3>Single End Mode</h3>' >> ~{outputfile}
         cat ~{overallqc_se_html} >> ~{outputfile}
         echo '</table>' >> ~{outputfile}
@@ -286,28 +291,31 @@ task pairedend_summaryreport {
         cat ~{overallqc_pe_html} >> ~{outputfile}
         echo '</table>' >> ~{outputfile}
 
-        echo -e 'Overall Quality Evaluation and Statistics Results\nSingle End mode' >> ~{outputtxt}
+        echo -e 'Overall Quality Evaluation and Statistics Results\nSingle End mode' >> ~{
+            outputtxt}
         cat ~{overallqc_se_txt} >> ~{outputtxt}
         echo -e '\nPaired End mode' >> ~{outputtxt}
         cat ~{overallqc_pe_txt} >> ~{outputtxt}
 
         if [ -f "~{controlqc_se_html}" ]; then
-            echo "<p><b>*</b> Peaks identified after Input/Control correction.</p>" >> ~{outputfile}
+            echo "<p><b>*</b> Peaks identified after Input/Control correction.</p>" >> ~{
+                outputfile}
         fi
         echo '</div>' >> ~{outputfile}
         tail -n 13 /usr/local/bin/seaseq_overall.header >> ~{outputfile}
         echo -e '\n' >> ~{outputtxt}
-
     >>>
-    runtime {
-        memory: ceil(memory_gb * ncpu) + " GB"
-        maxRetries: max_retries
-        docker: 'ghcr.io/stjude/seaseq/scripts:latest'
-        cpu: ncpu
-    }
+
     output {
         File summaryhtml = "~{outputfile}"
         File summarytxt = "~{outputtxt}"
+    }
+
+    runtime {
+        memory: ceil(memory_gb * ncpu) + " GB"
+        maxRetries: max_retries
+        docker: "ghcr.io/stjude/seaseq/scripts:latest"
+        cpu: ncpu
     }
 }
 
@@ -320,11 +328,12 @@ task pe_mergehtml {
         String fastq_type = "PEAseq Sample FASTQs"
         String default_location = "QC_files"
         String outputfile = "merged_summary.html"
-        String outputtxt = sub(outputfile, '.html', '.txt')
+        String outputtxt = sub(outputfile, ".html", ".txt")
         Int memory_gb = 10
         Int max_retries = 1
         Int ncpu = 1
     }
+
     command <<<
         mkdir -p ~{default_location} && cd ~{default_location}
 
@@ -335,37 +344,40 @@ task pe_mergehtml {
 
         echo '<h3>Individual FASTQs</h3>' >> ~{outputfile}
             
-        se_mergeoutput=$(cat ~{sep='; tail -n 1 ' se_htmlfiles})
+        se_mergeoutput=$(cat ~{sep="; tail -n 1 " se_htmlfiles})
         echo $se_mergeoutput >> ~{outputfile}
         sed -i "s/SEAseq Sample FASTQ Report/~{fastq_type} Report/" ~{outputfile}
         echo '</table>' >> ~{outputfile}
-        
+
         echo '<br><h3>After Paired End Reference Mapping</h3>' >> ~{outputfile}
-        pe_mergeoutput=$(cat ~{sep='; tail -n 1 ' pe_htmlfiles})
+        pe_mergeoutput=$(cat ~{sep="; tail -n 1 " pe_htmlfiles})
         echo $pe_mergeoutput >> ~{outputfile}
         echo '</table></div>' >> ~{outputfile}
-        
+
         tail -n 13 /usr/local/bin/seaseq_overall.header >> ~{outputfile}
 
         #working on TXTfile
         head -n 1 ~{se_txtfiles[0]} > ~{outputtxt}
-        se_mergeoutput=$(tail -n 1 ~{sep='; echo "xxx"; tail -n 1 ' se_txtfiles})
-        pe_mergeoutput=$(tail -n 1 ~{sep='; echo "xxx"; tail -n 1 ' pe_txtfiles})
-        echo $se_mergeoutput | awk -F" xxx " '{for (i=1;i<=NF;i++) print $i}' >> ~{outputtxt}
+        se_mergeoutput=$(tail -n 1 ~{sep="; echo \"xxx\"; tail -n 1 " se_txtfiles})
+        pe_mergeoutput=$(tail -n 1 ~{sep="; echo \"xxx\"; tail -n 1 " pe_txtfiles})
+        echo $se_mergeoutput | awk -F" xxx " '{for (i=1;i<=NF;i++) print $i}' >> ~{
+            outputtxt}
         echo -e '\nAfter Paired End Reference Mapping\n' >> ~{outputtxt}
-        echo $pe_mergeoutput | awk -F" xxx " '{for (i=1;i<=NF;i++) print $i}' >> ~{outputtxt}
+        echo $pe_mergeoutput | awk -F" xxx " '{for (i=1;i<=NF;i++) print $i}' >> ~{
+            outputtxt}
         perl -pi -e 's/ /\t/g' ~{outputtxt}
-
     >>>
-    runtime {
-        memory: ceil(memory_gb * ncpu) + " GB"
-        maxRetries: max_retries
-        docker: 'ghcr.io/stjude/seaseq/scripts:latest'
-        cpu: ncpu
-    }
+
     output {
         File mergefile = "~{default_location}/~{outputfile}"
         File mergetxt = "~{default_location}/~{outputtxt}"
+    }
+
+    runtime {
+        memory: ceil(memory_gb * ncpu) + " GB"
+        maxRetries: max_retries
+        docker: "ghcr.io/stjude/seaseq/scripts:latest"
+        cpu: ncpu
     }
 }
 
@@ -373,18 +385,21 @@ task sortfiles {
     input {
         Array[File] fastqfiles
     }
+
     command <<<
-        for filepath in ~{sep=' ' fastqfiles}; do
+        for filepath in ~{sep=" " fastqfiles}; do
             ln -s $filepath ${filepath##*/}
         done
     >>>
+
+    output {
+        Array[File] allfiles = glob("*.f*q*")
+    }
+
     runtime {
         memory: "5 GB"
         maxRetries: 0
-        docker: 'ghcr.io/stjude/abralab/binf-base:1.1.0'
+        docker: "ghcr.io/stjude/abralab/binf-base:1.1.0"
         cpu: 1
-    }
-    output {
-        Array[File] allfiles = glob('*.f*q*')
     }
 }
