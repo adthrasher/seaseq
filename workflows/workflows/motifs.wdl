@@ -54,28 +54,28 @@ workflow motifs {
 task meme {
     input {
         File fastafile
+        File folder_output
+        String default_location = "MOTIF_files"
+        String outputfolder = basename(folder_output) + "-meme_out"
         Boolean spamo_skip = false
         Boolean fimo_skip = false
-        String default_location = "MOTIF_files"
-        File folder_output
         Int max_retries = 1
         Int ncpu = 1
-        String outputfolder = basename(folder_output) + "-meme_out"
     }
 
     Int memory_gb = ceil((size(fastafile, "MiB") / 10) + 10)
 
     command <<<
-        mkdir -p ~{default_location} && cd ~{default_location}
+        mkdir -p "~{default_location}" && cd "~{default_location}" || exit
 
         meme-chip \
             ~{true="-spamo-skip" false="" spamo_skip} \
             ~{true="-fimo-skip" false="" fimo_skip} \
-            -oc ~{outputfolder} \
-            ~{fastafile}
+            -oc "~{outputfolder}" \
+            "~{fastafile}"
 
-        zip -9r ~{outputfolder}.zip ~{outputfolder}
-        cp ~{outputfolder}/summary.tsv ~{outputfolder}-summary.tsv
+        zip -9r "~{outputfolder}.zip" "~{outputfolder}"
+        cp "~{outputfolder}/summary.tsv" "~{outputfolder}-summary.tsv"
     >>>
 
     output {
@@ -94,20 +94,21 @@ task meme {
 task ame {
     input {
         File fastafile
-        Array[File]+ motif_databases
         File folder_output
+        Array[File]+ motif_databases
+        String default_location = "MOTIF_files"
+            + "/" + basename(folder_output) + "-ame_out"
         Int memory_gb = 10
         Int max_retries = 1
         Int ncpu = 1
-        String default_location = "MOTIF_files" + "/" + basename(folder_output) + "-ame_out"
     }
 
     command <<<
-        mkdir -p ~{default_location} && cd ~{default_location}
+        mkdir -p "~{default_location}" && cd "~{default_location}" || exit
 
         ame \
             -oc ./ \
-            ~{fastafile} \
+            "~{fastafile}" \
             ~{sep=" " motif_databases}
 
         gzip sequences.tsv
@@ -136,11 +137,15 @@ task process_motif_folder {
     command <<<
         old_name=~{parser}
         output_name=${old_name##*.}
-        mkdir -p $old_name
-        touch ~{parser}/$output_name
+        mkdir -p "$old_name"
+        touch "~{parser}/$output_name"
     >>>
 
     output {
         Array[File?] placeholder_output = glob("~{parser}/*")
+    }
+
+    runtime {
+        docker: "ghcr.io/stjude/abralab/memesuite:v5.3.3"
     }
 }

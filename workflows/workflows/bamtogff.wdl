@@ -4,13 +4,13 @@ workflow bamtogff {
     input {
         File bamfile
         File bamindex
-        File? control_bamfile
-        File? control_bamindex
         File gtffile
         File chromsizes
-        Int distance = 2000  # distance from site
+        File? control_bamfile
+        File? control_bamindex
         String samplename = basename(bamfile, ".bam")
         String default_location = "BAMDensity_files"
+        Int distance = 2000  # distance from site
     }
 
     call bamtogff_gtftogenes { input:
@@ -138,12 +138,14 @@ task bamtogff_gtftogenes {
 
     command <<<
         if [[ "~{gtffile}" == *"gz" ]]; then
-            gunzip -c ~{gtffile} > ~{sub(basename(gtffile), ".gz", "")}
+            gunzip -c "~{gtffile}" > "~{sub(basename(gtffile), ".gz", "")}"
         else
-           ln -s ~{gtffile} ~{sub(basename(gtffile), ".gz", "")}
+           ln -s "~{gtffile}" "~{sub(basename(gtffile), ".gz", "")}"
         fi
 
-        BAM2GFF_gtftogenes.py -g ~{sub(basename(gtffile), ".gz", "")} -c ~{chromsizes} -d ~{distance}
+        BAM2GFF_gtftogenes.py -g "~{sub(basename(gtffile), ".gz", "")}" \
+            -c "~{chromsizes}" \
+            -d "~{distance}"
     >>>
 
     output {
@@ -174,11 +176,11 @@ task bamtogff_main {
     }
 
     command <<<
-        ln -s ~{bamfile} ~{basename(bamfile)}
-        ln -s ~{bamindex} ~{basename(bamindex)}
+        ln -s "~{bamfile}" "~{basename(bamfile)}"
+        ln -s "~{bamindex}" "~{basename(bamindex)}"
 
-        BAM2GFF_main.py -b ~{basename(bamfile)} -i ~{annotation} -m ~{matrix_bins} -o ~{
-             matrix_name}
+        BAM2GFF_main.py -b "~{basename(bamfile)}" -i "~{annotation}" -m "~{matrix_bins}" -o "~{
+            matrix_name}"
     >>>
 
     output {
@@ -196,12 +198,12 @@ task bamtogff_main {
 task bamtogff_plot {
     input {
         File bamfile
-        File? control_bamfile
-        Int distance
         File s_promoters
         File s_genebody
         File s_upstream
         File s_downstream
+        Int distance
+        File? control_bamfile
         File? c_promoters
         File? c_genebody
         File? c_upstream
@@ -214,57 +216,71 @@ task bamtogff_plot {
     }
 
     command <<<
-
         #create a custom R script to recreate plots
         RSCRIPT="densityplots.R"
-        head -n 443 /opt/BAM2GFF-1.2.2/bin/BAM2GFF_plots.R > $RSCRIPT
-        echo 'if ("pdftools" %in% rownames(installed.packages()) == FALSE){ install.packages("pdftools") }' >> $RSCRIPT
-        echo '' >> $RSCRIPT
-        echo '#=========================================' >> $RSCRIPT
-        echo '' >> $RSCRIPT
-        echo 'folder = "'sample_matrixfiles.zip'"' >> $RSCRIPT
+        head -n 443 /opt/BAM2GFF-1.2.2/bin/BAM2GFF_plots.R > "$RSCRIPT"
+        echo 'if ("pdftools" %in% rownames(installed.packages()) == FALSE){ install.packages("pdftools") }' >> "$RSCRIPT"
+        echo '' >> "$RSCRIPT"
+        echo '#=========================================' >> "$RSCRIPT"
+        echo '' >> "$RSCRIPT"
+        echo 'folder = "'sample_matrixfiles.zip'"' >> "$RSCRIPT"
         ~{if defined(control_bamfile) then "echo 'opt <- list(z=TRUE, c=\"input_matrixfiles.zip\")' >> $RSCRIPT"
             else "echo 'opt <- list(z=TRUE, c=NA)' >> $RSCRIPT"}
-        echo 'samplename = "'~{samplename}'"' >> $RSCRIPT
-        echo 'unzipped_folder = "UNZIPPED"' >> $RSCRIPT
-        echo 'distance = round(~{distance}/1000,1)' >> $RSCRIPT
-        echo '' >> $RSCRIPT
-        echo '#=========================================' >> $RSCRIPT
-        echo '' >> $RSCRIPT
-        tail -n 127 /opt/BAM2GFF-1.2.2/bin/BAM2GFF_plots.R | head -n -3 >> $RSCRIPT 
+        echo 'samplename = "'~{samplename}'"' >> "$RSCRIPT"
+        echo 'unzipped_folder = "UNZIPPED"' >> "$RSCRIPT"
+        echo 'distance = round(~{distance}/1000,1)' >> "$RSCRIPT"
+        echo '' >> "$RSCRIPT"
+        echo '#=========================================' >> "$RSCRIPT"
+        echo '' >> "$RSCRIPT"
+        tail -n 127 /opt/BAM2GFF-1.2.2/bin/BAM2GFF_plots.R | head -n -3 >> "$RSCRIPT"
 
         #moving sample matrix files to sample_matrixfiles folder
-        mkdir -p ~{default_location} sample_matrixfiles
-        cp ~{s_promoters} ~{s_genebody} ~{s_upstream} ~{s_downstream} sample_matrixfiles/
+        mkdir -p "~{default_location}" sample_matrixfiles
+        cp "~{s_promoters}" \
+            "~{s_genebody}" \
+            "~{s_upstream}" \
+            "~{s_downstream}" \
+            sample_matrixfiles/
 
-        cd sample_matrixfiles; zip -9r ../sample_matrixfiles.zip *; cd ..
+        ( cd sample_matrixfiles || exit; zip -9r ../sample_matrixfiles.zip ./* )
 
         #creating plots w/ or w/o input bam files if provided
         if [ -f "~{control_bamfile}" ]; then
             mkdir -p input_matrixfiles
-            cp ~{c_promoters} ~{c_genebody} ~{c_upstream} ~{c_downstream} input_matrixfiles/
+            cp "~{c_promoters}" \
+                "~{c_genebody}" \
+                "~{c_upstream}" \
+                "~{c_downstream}" \
+                input_matrixfiles/
 
             echo "Making PLOTS for ~{basename(bamfile)} read densities against INPUT"
-            BAM2GFF_plots.R -n ~{samplename} -d ~{distance} -f sample_matrixfiles -c input_matrixfiles
+            BAM2GFF_plots.R -n "~{samplename}" \
+                -d "~{distance}" \
+                -f sample_matrixfiles \
+                -c input_matrixfiles
 
-            cd input_matrixfiles; zip -9r ../input_matrixfiles.zip *; cd ..
+            ( cd input_matrixfiles || exit; zip -9r ../input_matrixfiles.zip ./* )
 
-            mv input_matrixfiles.zip ~{default_location}
+            mv input_matrixfiles.zip "~{default_location}"
 
         else
             echo "Making PLOTS for ~{basename(bamfile)} read densities"
-            BAM2GFF_plots.R -n ~{samplename} -d ~{distance} -f sample_matrixfiles
+            BAM2GFF_plots.R -n "~{samplename}" -d "~{distance}" -f sample_matrixfiles
 
         fi
 
         if [ ! -f "~{samplename}-heatmap.entiregene.png" ]; then
             echo "using PDFtoPPM"
             #convert pdf to png #not needed since using pdftools
-            pdftoppm ~{samplename}-heatmap.entiregene.pdf ~{samplename}-heatmap.entiregene -png -singlefile -r 300
-            pdftoppm ~{samplename}-heatmap.promoters.pdf ~{samplename}-heatmap.promoters -png -singlefile -r 300
+            pdftoppm "~{samplename}-heatmap.entiregene.pdf" \
+                "~{samplename}-heatmap.entiregene" \
+                -png -singlefile -r 300
+            pdftoppm "~{samplename}-heatmap.promoters.pdf" \
+                "~{samplename}-heatmap.promoters" \
+                -png -singlefile -r 300
         fi
 
-        mv $RSCRIPT sample_matrixfiles.zip *png *pdf *jpg ~{default_location}
+        mv "$RSCRIPT" sample_matrixfiles.zip ./*png ./*pdf ./*jpg "~{default_location}"
 
         echo "Done!"
     >>>

@@ -4,11 +4,11 @@ import "../tasks/seaseq_util.wdl" as util
 
 workflow visualization {
     input {
-        File? xlsfile
         File wigfile
         File chromsizes
-        Boolean control = false
+        File? xlsfile
         String default_location = "Coverage_files"
+        Boolean control = false
     }
 
     if (defined(xlsfile)) {
@@ -60,13 +60,13 @@ task wigtobigwig {
     }
 
     command <<<
-        mkdir -p ~{default_location} && cd ~{default_location}
+        mkdir -p "~{default_location}" && cd "~{default_location}" || exit
 
         wigToBigWig \
             -clip \
-            ~{wigfile} \
-            ~{chromsizes} \
-            ~{outputfile}
+            "~{wigfile}" \
+            "~{chromsizes}" \
+            "~{outputfile}"
     >>>
 
     output {
@@ -93,13 +93,13 @@ task igvtdf {
     }
 
     command <<<
-        mkdir -p ~{default_location} && cd ~{default_location}
-        ln -s ~{chromsizes} genome.chrom.sizes
+        mkdir -p "~{default_location}" && cd "~{default_location}" || exit
+        ln -s "~{chromsizes}" genome.chrom.sizes
 
         igvtools \
             toTDF \
-            ~{wigfile} \
-            ~{outputfile} \
+            "~{wigfile}" \
+            "~{outputfile}" \
             genome.chrom.sizes
     >>>
 

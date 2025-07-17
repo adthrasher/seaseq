@@ -7,16 +7,16 @@ import "../tasks/samtools.wdl"
 workflow mapping {
     input {
         File fastqfile
-        File? fastqfile_R2
-        Int insert_size = 600
         Array[File] index_files
+        File? fastqfile_R2
         File? metricsfile
         File? blacklist
-        Int read_length = 75
-        Boolean paired_end = false
+        String? results_name
         String strandedness = "fr"
         String default_location = "BAM_files"
-        String? results_name
+        Boolean paired_end = false
+        Int insert_size = 600
+        Int read_length = 75
     }
 
     if (!defined(fastqfile_R2)) {
