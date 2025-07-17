@@ -13,13 +13,13 @@ task indexstats {
     }
 
     command <<<
-        mkdir -p ~{default_location} && cd ~{default_location}
+        mkdir -p "~{default_location}" && cd "~{default_location}" || exit
 
-        ln -s ~{bamfile} ~{basename(bamfile)}
+        ln -s "~{bamfile}" "~{basename(bamfile)}"
 
-        samtools flagstat ~{bamfile} > ~{flagstat}
+        samtools flagstat "~{bamfile}" > "~{flagstat}"
 
-        samtools index ~{basename(bamfile)}
+        samtools index "~{basename(bamfile)}"
     >>>
 
     output {
@@ -46,12 +46,12 @@ task markdup {
     }
 
     command <<<
-        mkdir -p ~{default_location} && cd ~{default_location}
+        mkdir -p "~{default_location}" && cd "~{default_location}" || exit
 
         samtools markdup \
             -r -s \
-            ~{bamfile} \
-            ~{outputfile}
+            "~{bamfile}" \
+            "~{outputfile}"
     >>>
 
     output {
@@ -79,31 +79,25 @@ task viewsort {
     }
 
     command <<<
-        mkdir -p ~{default_location} && cd ~{default_location}
+        mkdir -p "~{default_location}" && cd "~{default_location}" || exit
 
         if [ "~{paired_end}" == 'true' ]; then
-            # awk -F\t 'BEGIN{j=0}{j++}{if(NF>5 && j%2==0){ \
-            #     printf "%s_%.0f\t", $1, j-1 } else if(NF>5 && j%2==1){ \
-            #     printf "%s_%.0f\t", $1, j } else { printf $1 "\t";j=0 } \
-            #     for(i=2;i<=NF;i++){ printf "%s\t", $i}; printf "\n" }' \
-            #     ~{samfile} > ~{basename(sub(samfile, ".sam$", ".renamed.sam"))}
-
             awk -F\t 'BEGIN{j=0}{j++}{for(i=1;i<=NF;i++){ \
                 printf "%s\t", $i}; if(NF>5 && j%2==0){ \
                 printf "ps:i:%.0f", j-1 } else if(NF>5 && j%2==1){ \
                 printf "ps:i:%.0f", j } else { j=0 } printf "\n" }' \
-                ~{samfile} > ~{basename(sub(samfile, ".sam$", ".renamed.sam"))}
+                "~{samfile}" > "~{basename(sub(samfile, ".sam$", ".renamed.sam"))}"
 
             samtools fixmate -m \
-                ~{basename(sub(samfile, ".sam$", ".renamed.sam"))} \
-                ~{fixmatefile}
+                "~{basename(sub(samfile, ".sam$", ".renamed.sam"))}" \
+                "~{fixmatefile}"
             samtools sort \
-                ~{fixmatefile} \
-                -o ~{outputfile}
+                "~{fixmatefile}" \
+                -o "~{outputfile}"
         else
             samtools sort \
-                ~{samfile} \
-                -o ~{outputfile}
+                "~{samfile}" \
+                -o "~{outputfile}"
         fi
     >>>
 
@@ -130,15 +124,15 @@ task faidx {
 
     command <<<
         if [[ "~{reference}" == *"gz" ]]; then
-            gunzip -c ~{reference} > ~{sub(basename(reference), ".gz", "")}
+            gunzip -c "~{reference}" > "~{sub(basename(reference), ".gz", "")}"
         else
-           ln -s ~{reference} ~{sub(basename(reference), ".gz", "")}
+           ln -s "~{reference}" "~{sub(basename(reference), ".gz", "")}"
         fi
 
-        samtools faidx ~{sub(basename(reference), ".gz", "")} -o ~{sub(basename(reference),
-             ".gz", "")}.fai
-        cut -f1,2 ~{sub(basename(reference), ".gz", "")}.fai > ~{sub(basename(reference), ".gz",
-            "")}.tab
+        samtools faidx "~{sub(basename(reference), ".gz", "")}" \
+            -o "~{sub(basename(reference),".gz", "")}.fai"
+        cut -f1,2 "~{sub(basename(reference), ".gz", "")}.fai" \
+            > "~{sub(basename(reference), ".gz","")}.tab"
     >>>
 
     output {
@@ -168,11 +162,11 @@ task mergebam {
     }
 
     command <<<
-        mkdir -p ~{default_location} && cd ~{default_location}
+        mkdir -p "~{default_location}" && cd "~{default_location}" || exit
 
         total_readlength=0
         for each in $(ls -1 ~{sep=" " metricsfiles}); do
-            readlength=$(tail -n 1 $each | awk '{print $4}');
+            readlength=$(tail -n 1 "$each" | awk '{print $4}');
             total_readlength=$(echo "$readlength + $total_readlength" | bc)
         done
         echo "$total_readlength/~{length(metricsfiles)}" | bc > average_readlength.txt
@@ -182,15 +176,15 @@ task mergebam {
         if [ "~{paired_end}" == 'true' ]; then
             samtools merge \
                 --threads ~{ncpu} \
-                ~{fixmatefile} \
+                "~{fixmatefile}" \
                 ~{sep=" " bamfiles}
             samtools sort \
-                ~{fixmatefile} \
-                -o ~{outputfile}
+                "~{fixmatefile}" \
+                -o "~{outputfile}"
         else
             samtools merge \
                 --threads ~{ncpu} \
-                ~{outputfile} \
+                "~{outputfile}" \
                 ~{sep=" " bamfiles}
         fi
     >>>

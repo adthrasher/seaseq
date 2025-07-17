@@ -3,8 +3,8 @@ version 1.0
 task basicfastqstats {
     input {
         File fastqfile
-        String outputfile = sub(basename(fastqfile), ".fastq.gz|.fq.gz", "-fastq.readlength_dist.txt"
-            )
+        String outputfile =
+            sub(basename(fastqfile), ".fastq.gz|.fq.gz", "-fastq.readlength_dist.txt")
         String default_location = "QC_files/STATS"
         Int max_retries = 1
         Int ncpu = 1
@@ -14,9 +14,9 @@ task basicfastqstats {
 
     command <<<
 
-        mkdir -p ~{default_location} && cd ~{default_location}
+        mkdir -p "~{default_location}" && cd "~{default_location}" || exit
 
-        zcat ~{fastqfile} | awk 'NR%4==2' | awk '{print length}' | sort -n > values.dat
+        zcat "~{fastqfile}" | awk 'NR%4==2' | awk '{print length}' | sort -n > values.dat
 
         stddev=$(awk '{x+=$0;y+=$0^2}END{print sqrt(y/NR-(x/NR)^2)}' values.dat)
 
@@ -35,10 +35,10 @@ task basicfastqstats {
         IQR=$(echo "$Q3-$Q1" | bc)
 
 
-        echo Min.$'\t'1st Qu.$'\t'Median$'\t'Mean$'\t'3rd Qu.$'\t'Max.$'\t'StdDev.$'\t'IQR > ~{
-            outputfile}
-        echo $minimum$'\t'$Q1$'\t'$median$'\t'$average$'\t'$Q3$'\t'$maximum$'\t'$stddev$'\t'$IQR >> ~{
-            outputfile}
+        echo Min.$'\t'1st Qu.$'\t'Median$'\t'Mean$'\t'3rd Qu.$'\t'Max.$'\t'StdDev.$'\t'IQR \
+            > "~{outputfile}"
+        echo $minimum$'\t'$Q1$'\t'$median$'\t'$average$'\t'$Q3$'\t'$maximum$'\t'$stddev$'\t'$IQR \
+            >> "~{outputfile}"
 
         echo ${average%.*} > readlength.txt
 
@@ -61,9 +61,10 @@ task basicfastqstats {
 task flankbed {
     input {
         File bedfile
-        Int flank = 50
-        String outputfile = basename(bedfile, ".bed") + "-flank" + flank + ".bed"
+        String outputfile =
+            basename(bedfile, ".bed") + "-flank" + flank + ".bed"
         String default_location = "."
+        Int flank = 50
         Int memory_gb = 5
         Int max_retries = 1
         Int ncpu = 1
@@ -71,9 +72,9 @@ task flankbed {
 
     command <<<
 
-        mkdir -p ~{default_location} && cd ~{default_location}
-        ln -s ~{bedfile} ~{basename(bedfile)}
-        echo ~{flank} > flank.rdl
+        mkdir -p "~{default_location}" && cd "~{default_location}" || exit
+        ln -s "~{bedfile}" "~{basename(bedfile)}"
+        echo "~{flank}" > flank.rdl
         python <<CODE
 
         input = open("~{basename(bedfile)}",'r')
@@ -105,22 +106,22 @@ task flankbed {
 
 task summaryreport {
     input {
+        File overallqc_txt
+        File overallqc_html
         File? controlqc_txt
         File? controlqc_html
         File? sampleqc_txt
         File? sampleqc_html
-        File overallqc_txt
-        File overallqc_html
         String? default_location
         String default_location_m = if defined(default_location) then select_first([
             default_location,
             overallqc_txt,
         ]) + "/" else ""
         String fastq_mode = "SEAseq"
-        String outputfile = sub(basename(overallqc_html), "stats.htmlx", "seaseq_report.html"
-            )
-        String outputtxt = sub(basename(overallqc_html), "stats.htmlx", "seaseq_report.txt"
-            )
+        String outputfile =
+            sub(basename(overallqc_html), "stats.htmlx", "seaseq_report.html")
+        String outputtxt =
+            sub(basename(overallqc_html), "stats.htmlx", "seaseq_report.txt")
         Int memory_gb = 5
         Int max_retries = 1
         Int ncpu = 1
@@ -129,49 +130,49 @@ task summaryreport {
     command <<<
 
         # make default location
-        mkdir -p $(pwd)/~{default_location_m}
-        cd $(pwd)/~{default_location_m}
+        mkdir -p "$(pwd)/~{default_location_m}"
+        cd "$(pwd)/~{default_location_m}" || exit
 
         # Printing header
-        head -n 121 /usr/local/bin/seaseq_overall.header > ~{outputfile}
+        head -n 121 /usr/local/bin/seaseq_overall.header > "~{outputfile}"
 
         if [ -f "~{sampleqc_html}" ]; then
             # Printing Sample Quality Reports
-            echo '<h2>Sample FASTQs Quality Results</h2>' >> ~{outputfile}
-            cat ~{sampleqc_html} >> ~{outputfile}
-            echo -e '</table></div>\n<div class="body">' >> ~{outputfile}
+            echo '<h2>Sample FASTQs Quality Results</h2>' >> "~{outputfile}"
+            cat "~{sampleqc_html}" >> "~{outputfile}"
+            echo -e '</table></div>\n<div class="body">' >> "~{outputfile}"
 
-            echo -e 'SEAseq Report\n~{fastq_mode} Quality Statistics and Evaluation Report\n\nSample FASTQs Quality Results' > ~{
-             outputtxt}
-            cat ~{sampleqc_txt} >> ~{outputtxt}
-            echo -e '\n' >> ~{outputtxt}
+            echo -e 'SEAseq Report\n~{fastq_mode} Quality Statistics and Evaluation Report\n\nSample FASTQs Quality Results' \
+                > "~{outputtxt}"
+            cat "~{sampleqc_txt}" >> "~{outputtxt}"
+            echo -e '\n' >> "~{outputtxt}"
         fi
 
         if [ -f "~{controlqc_html}" ]; then
             # Printing Control Quality Reports
-            echo '<h2>Control FASTQs Quality Results</h2>' >> ~{outputfile}
-            cat ~{controlqc_html} >> ~{outputfile}
-            echo -e '</table></div>\n<div class="body">' >> ~{outputfile}
+            echo '<h2>Control FASTQs Quality Results</h2>' >> "~{outputfile}"
+            cat "~{controlqc_html}" >> "~{outputfile}"
+            echo -e '</table></div>\n<div class="body">' >> "~{outputfile}"
 
-            echo 'Control FASTQs Quality Results' >> ~{outputtxt}
-            cat ~{controlqc_txt} >> ~{outputtxt}
-            echo -e '\n' >> ~{outputtxt}
+            echo 'Control FASTQs Quality Results' >> "~{outputtxt}"
+            cat "~{controlqc_txt}" >> "~{outputtxt}"
+            echo -e '\n' >> "~{outputtxt}"
         fi
 
         # Printing Overall Quality Reports
-        echo '<h2>Overall Quality Evaluation and Statistics Results</h2><p>' >> ~{
-            outputfile}
-        cat ~{overallqc_html} >> ~{outputfile}
-        echo '</table>' >> ~{outputfile}
-        echo -e 'Overall Quality Evaluation and Statistics Results' >> ~{outputtxt}
-        cat ~{overallqc_txt} >> ~{outputtxt}
+        echo '<h2>Overall Quality Evaluation and Statistics Results</h2><p>' \
+            >> "~{outputfile}"
+        cat "~{overallqc_html}" >> "~{outputfile}"
+        echo '</table>' >> "~{outputfile}"
+        echo -e 'Overall Quality Evaluation and Statistics Results' >> "~{outputtxt}"
+        cat "~{overallqc_txt}" >> "~{outputtxt}"
         if [ -f "~{controlqc_html}" ]; then
-            echo "<p><b>*</b> Peaks identified after Input/Control correction.</p>" >> ~{
-                outputfile}
+            echo "<p><b>*</b> Peaks identified after Input/Control correction.</p>" \
+                >> "~{outputfile}"
         fi
-        echo '</div>' >> ~{outputfile}
-        tail -n 13 /usr/local/bin/seaseq_overall.header >> ~{outputfile}
-        echo -e '\n' >> ~{outputtxt}
+        echo '</div>' >> "~{outputfile}"
+        tail -n 13 /usr/local/bin/seaseq_overall.header >> "~{outputfile}"
+        echo -e '\n' >> "~{outputtxt}"
     >>>
 
     output {
@@ -189,9 +190,9 @@ task summaryreport {
 
 task evalstats {
     input {
+        File fastqczip
         File? bambed
         File? sppfile
-        File fastqczip
         File? bamflag
         File? rmdupflag
         File? bkflag
@@ -202,11 +203,11 @@ task evalstats {
         File? superenhancers
         String fastq_type = "Sample FASTQs"
         String default_location = "QC_files/STATS"
-        Boolean peaseq = false
         String outputfile = sub(basename(fastqczip), "_fastqc.zip", "-stats.csv")
         String outputhtml = sub(basename(fastqczip), "_fastqc.zip", "-stats.html")
         String outputtext = sub(basename(fastqczip), "_fastqc.zip", "-stats.txt")
         String configml = sub(basename(fastqczip), "_fastqc.zip", "-config.ml")
+        Boolean peaseq = false
         Int memory_gb = 20
         Int max_retries = 1
         Int ncpu = 1
@@ -214,35 +215,34 @@ task evalstats {
 
     command <<<
 
-        mkdir -p ~{default_location}
-        cd ~{default_location}
+        mkdir -p "~{default_location}"
+        cd "~{default_location}" || exit
 
         evaluation-statistics.pl \
-            -fqc ~{fastqczip} \
-            ~{if defined(bambed) then "-b " + bambed else ""} \
-            ~{if defined(sppfile) then "-s " + sppfile else ""} \
-            ~{if defined(countsfile) then "-c " + countsfile else ""} \
-            ~{if defined(peaksxls) then "-px " + peaksxls else ""} \
-            ~{if defined(bamflag) then "-bamflag " + bamflag else ""} \
-            ~{if defined(bkflag) then "-bkflag " + bkflag else ""} \
-            ~{if defined(rmdupflag) then "-rmdupflag " + rmdupflag else ""} \
-            ~{if defined(fastqmetrics) then "-fx " + fastqmetrics else ""} \
-            ~{if defined(enhancers) then "-re " + enhancers else ""} \
-            ~{if defined(superenhancers) then "-rs " + superenhancers else ""} \
-            -outfile ~{outputfile}
+            -fqc "~{fastqczip}" \
+            ~{"-b '" + bambed + "'"} \
+            ~{"-s '" + sppfile + "'"} \
+            ~{"-c '" + countsfile + "'"} \
+            ~{"-px '" + peaksxls + "'"} \
+            ~{"-bamflag '" + bamflag + "'"} \
+            ~{"-bkflag '" + bkflag + "'"} \
+            ~{"-rmdupflag '" + rmdupflag + "'"} \
+            ~{"-fx '" + fastqmetrics + "'"} \
+            ~{"-re '" + enhancers + "'"} \
+            ~{"-rs '" + superenhancers + "'"} \
+            -outfile "~{outputfile}"
 
-        head -n 245 /usr/local/bin/seaseq_overall.header  | tail -n 123 > ~{outputhtml}
+        head -n 245 /usr/local/bin/seaseq_overall.header  | tail -n 123 > "~{outputhtml}"
 
         if [[ "~{peaseq}" == "true" ]]; then
-            sed -i "s/SEAseq Report/PEAseq Report/" ~{outputhtml}
-            sed -i "s/SEAseq Quality/PEAseq Quality/" ~{outputhtml}
+            sed -i "s/SEAseq Report/PEAseq Report/" "~{outputhtml}" 
+            sed -i "s/SEAseq Quality/PEAseq Quality/" "~{outputhtml}"
         fi
 
-        cat ~{outputhtml}x >> ~{outputhtml}
-        sed -i "s/SEAseq Sample FASTQ Report/~{fastq_type} Report/" ~{outputhtml}
-        echo '</table></div>' >> ~{outputhtml}
-        tail -n 13 /usr/local/bin/seaseq_overall.header >> ~{outputhtml}
-
+        cat "~{outputhtml}x" >> "~{outputhtml}"
+        sed -i "s/SEAseq Sample FASTQ Report/~{fastq_type} Report/" "~{outputhtml}"
+        echo '</table></div>' >> "~{outputhtml}"
+        tail -n 13 /usr/local/bin/seaseq_overall.header >> "~{outputhtml}"
     >>>
 
     output {
@@ -265,9 +265,9 @@ task normalize {
     input {
         File wigfile
         File xlsfile
-        Boolean control = false
         String default_location = "Coverage_files"
         String outputfile = sub(basename(wigfile), ".wig.gz", ".RPM.wig")
+        Boolean control = false
         Int memory_gb = 5
         Int max_retries = 1
         Int ncpu = 1
@@ -275,11 +275,11 @@ task normalize {
 
     command <<<
 
-        mkdir -p ~{default_location} && cd ~{default_location}
+        mkdir -p "~{default_location}" && cd "~{default_location}" || exit
 
-        gunzip -c ~{wigfile} > ~{basename(wigfile, ".gz")}
-        ln -s ~{basename(wigfile, ".gz")} thewig.wig
-        ln -s ~{xlsfile} xlsfile.xls
+        gunzip -c "~{wigfile}" > "~{basename(wigfile, ".gz")}"
+        ln -s "~{basename(wigfile, ".gz")}" thewig.wig
+        ln -s "~{xlsfile}" xlsfile.xls
 
         python <<CODE
         import subprocess
@@ -315,8 +315,8 @@ task normalize {
                 file1.write("%s\t%s\n" %(lines[0],height))
                 
         CODE
-        mv output.out ~{outputfile}
-        gzip ~{outputfile}
+        mv output.out "~{outputfile}"
+        gzip "~{outputfile}"
     >>>
 
     output {
@@ -334,34 +334,33 @@ task normalize {
 task peaksanno {
     input {
         File bedfile
-        File? summitfile
-        String default_location = "PEAKSAnnotation"
         File gtffile
         File chromsizes
+        File? summitfile
+        String default_location = "PEAKSAnnotation"
         Int memory_gb = 5
         Int max_retries = 1
         Int ncpu = 1
     }
 
     command <<<
+        mkdir -p "~{default_location}"
 
-        mkdir -p ~{default_location}
-
-        cd ~{default_location}
+        cd "~{default_location}" || exit
 
         if [[ "~{gtffile}" == *"gz" ]]; then
-            gunzip -c ~{gtffile} > ~{sub(basename(gtffile), ".gz", "")}
+            gunzip -c "~{gtffile}" > "~{sub(basename(gtffile), ".gz", "")}"
         else
-           ln -s ~{gtffile} ~{sub(basename(gtffile), ".gz", "")}
+           ln -s "~{gtffile}" "~{sub(basename(gtffile), ".gz", "")}"
         fi
 
-        checkcolumns=$(wc -l ~{bedfile} | awk -F' '  '{print $1}')
+        checkcolumns=$(wc -l "~{bedfile}" | awk -F' '  '{print $1}')
         if [[ $checkcolumns -gt 0 ]]; then
             peaksanno.py \
-            -p ~{bedfile} \
-            ~{if defined(summitfile) then "-s " + summitfile else ""} \
-            -g ~{sub(basename(gtffile), ".gz", "")} \
-            -c ~{chromsizes}
+            -p "~{bedfile}" \
+            ~{"-s '" + summitfile + "'"} \
+            -g "~{sub(basename(gtffile), ".gz", "")}" \
+            -c "~{chromsizes}"
         fi
     >>>
 
@@ -388,9 +387,9 @@ task mergehtml {
     input {
         Array[File] htmlfiles
         Array[File] txtfiles
+        String outputfile
         String fastq_type = "Sample FASTQs"
         String default_location = "QC_files"
-        String outputfile
         Boolean peaseq = false
         Int memory_gb = 10
         Int max_retries = 1
@@ -398,28 +397,28 @@ task mergehtml {
     }
 
     command <<<
-        mkdir -p ~{default_location} && cd ~{default_location}
+        mkdir -p "~{default_location}" && cd "~{default_location}" || exit
 
         #extract header information
-        head -n 245 /usr/local/bin/seaseq_overall.header  | tail -n 123 > ~{outputfile}
+        head -n 245 /usr/local/bin/seaseq_overall.header  | tail -n 123 > "~{outputfile}"
         if [[ "~{peaseq}" == "true" ]]; then
-            sed -i "s/SEAseq Report/PEAseq Report/" ~{outputfile}
-            sed -i "s/SEAseq Quality/PEAseq Quality/" ~{outputfile}
+            sed -i "s/SEAseq Report/PEAseq Report/" "~{outputfile}"
+            sed -i "s/SEAseq Quality/PEAseq Quality/" "~{outputfile}"
         fi
 
         mergeoutput=$(cat ~{sep="; tail -n 1 " htmlfiles})
-        echo $mergeoutput >> ~{outputfile}
-        sed -i "s/SEAseq Sample FASTQ Report/~{fastq_type} Report/" ~{outputfile}
-        echo '</table></div>' >> ~{outputfile}
-        tail -n 13 /usr/local/bin/seaseq_overall.header >> ~{outputfile}
+        echo "$mergeoutput" >> "~{outputfile}"
+        sed -i "s/SEAseq Sample FASTQ Report/~{fastq_type} Report/" "~{outputfile}"
+        echo '</table></div>' >> "~{outputfile}"
+        tail -n 13 /usr/local/bin/seaseq_overall.header >> "~{outputfile}"
 
-        echo $mergeoutput > ~{outputfile}x
+        echo "$mergeoutput" > "~{outputfile}x"
 
-        head -n 1 ~{txtfiles[0]} > ~{outputfile}.txt
+        head -n 1 "~{txtfiles[0]}" > "~{outputfile}.txt"
         mergeoutput=$(tail -n 1 ~{sep="; echo \"xxx\"; tail -n 1 " txtfiles})
-        echo $mergeoutput | awk -F" xxx " '{for (i=1;i<=NF;i++) print $i}' >> ~{outputfile
-            }.txt
-        perl -pi -e 's/ /\t/g' ~{outputfile}.txt
+        echo "$mergeoutput" | awk -F" xxx " '{for (i=1;i<=NF;i++) print $i}' \
+            >> "~{outputfile}.txt"
+        perl -pi -e 's/ /\t/g' "~{outputfile}.txt"
     >>>
 
     output {
@@ -452,8 +451,8 @@ task concatstats {
 
     command <<<
 
-        mkdir -p ~{default_location}
-        cd ~{default_location}
+        mkdir -p "~{default_location}"
+        cd "~{default_location}" || exit
 
         python <<CODE
 
@@ -571,18 +570,19 @@ task concatstats {
 
         CODE
 
-        head -n 245 /usr/local/bin/seaseq_overall.header | tail -n 123 > ~{outputfile}-stats.html
+        head -n 245 /usr/local/bin/seaseq_overall.header | tail -n 123 \
+            > "~{outputfile}-stats.html"
         if [[ "~{peaseq}" == "true" ]]; then
-            sed -i "s/SEAseq Report/PEAseq Report/" ~{outputfile}-stats.html
-            sed -i "s/SEAseq Quality/PEAseq Quality/" ~{outputfile}-stats.html
+            sed -i "s/SEAseq Report/PEAseq Report/" "~{outputfile}-stats.html"
+            sed -i "s/SEAseq Quality/PEAseq Quality/" "~{outputfile}-stats.html"
         fi
 
-        cat ~{outputfile}-stats.htmlx >> ~{outputfile}-stats.html
-        echo "</table><p><b>*</b> Peaks identified after Input/Control correction.</p></div>" >> ~{
-            outputfile}-stats.html
-        tail -n 13 /usr/local/bin/seaseq_overall.header >> ~{outputfile}-stats.html
-        sed -i "s/SEAseq Sample FASTQ Report/~{fastq_mode} Comprehensive Report/" ~{
-             outputfile}-stats.html
+        cat "~{outputfile}-stats.htmlx" >> "~{outputfile}-stats.html"
+        echo "</table><p><b>*</b> Peaks identified after Input/Control correction.</p></div>" \
+            >> "~{outputfile}-stats.html"
+        tail -n 13 /usr/local/bin/seaseq_overall.header >> "~{outputfile}-stats.html"
+        sed -i "s/SEAseq Sample FASTQ Report/~{fastq_mode} Comprehensive Report/" \
+            "~{outputfile}-stats.html"
     >>>
 
     output {
@@ -611,28 +611,29 @@ task addreadme {
     }
 
     command <<<
-        mkdir -p ~{default_location}
-        cd ~{default_location}
-        echo 'SEAseq performs three peak calling algorithms, and they will be saved into the following descriptive folders:' > ~{
-            output_file}
-        echo -e '1.  NARROW_peaks   : For shorter or narrow regions of enrichment using MACS.' >> ~{
-            output_file}
-        echo '                     SEAseq performs three different peak calls:' >> ~{
-            output_file}
-        echo '                     a.  <samplename>-p9_kd-auto :  Peaks identified excluding duplicate tags.' >> ~{
-            output_file}
-        echo '                     b.  <samplename>-p9_kd-all  :  Peaks identified using duplicates to estimate signal.' >> ~{
-            output_file}
-        echo '                                                        This will be used to identify stitched peaks.' >> ~{
-            output_file}
-        echo '                     c.  <samplename>-nm         :  Peaks identified using a defined shift size (shiftsize=200).' >> ~{
-            output_file}
-        echo '                                                        This is used to generate an unbiased signal coverage plot.' >> ~{
-            output_file}
-        echo -e '\n2.  BROAD_peaks    : For broad peaks or broad domains using SICER.' >> ~{
-            output_file}
-        echo -e '\n3.  STITCHED_peaks : For clusters of stitched peaks identified using the ROSE program.\n' >> ~{
-            output_file}
+        mkdir -p "~{default_location}"
+        cd "~{default_location}" || exit
+        echo 'SEAseq performs three peak calling algorithms, and they will be saved into the following descriptive folders:' \
+            > "~{output_file}"
+        echo -e '1.  NARROW_peaks   : For shorter or narrow regions of enrichment using MACS.' \
+            >> "~{output_file}"
+        echo '                     SEAseq performs three different peak calls:' \
+            >> "~{output_file}"
+        echo '                     a.  <samplename>-p9_kd-auto :  Peaks identified excluding duplicate tags.' \
+            >> "~{output_file}"
+        echo '                     b.  <samplename>-p9_kd-all  :  Peaks identified using duplicates to estimate signal.' \
+            >> "~{output_file}"
+        echo '                                                        This will be used to identify stitched peaks.' \
+            >> "~{output_file}"
+        echo '                     c.  <samplename>-nm         :  Peaks identified using a defined shift size (shiftsize=200).' \
+            >> "~{output_file}"
+        echo '                                                        This is used to generate an unbiased signal coverage plot.' \
+            >> "~{output_file}"
+        echo -e '\n2.  BROAD_peaks    : For broad peaks or broad domains using SICER.' \
+            >> "~{output_file}"
+        echo -e \
+            '\n3.  STITCHED_peaks : For clusters of stitched peaks identified using the ROSE program.\n' \
+            >> "~{output_file}"
     >>>
 
     output {
@@ -657,10 +658,14 @@ task effective_genome_size {
     }
 
     command <<<
-        faCount -summary ~{reference} | cut -f3,4,5,6 | tail -n 2 > genomeinformation.txt
+        faCount -summary "~{reference}" \
+            | cut -f3,4,5,6 \
+            | tail -n 2 > genomeinformation.txt
 
-        head -n 1 genomeinformation.txt | awk -F'[\t ]' '{print $1 + $2 + $3 + $4}' > genomesize
-        tail -n 1 genomeinformation.txt | awk -F'[\t ]' '{print $1 + $2 + $3 + $4}' > genomefraction
+        head -n 1 genomeinformation.txt \
+            | awk -F'[\t ]' '{print $1 + $2 + $3 + $4}' > genomesize
+        tail -n 1 genomeinformation.txt \
+            | awk -F'[\t ]' '{print $1 + $2 + $3 + $4}' > genomefraction
     >>>
 
     output {

@@ -11,14 +11,15 @@ task fastqc {
     }
 
     command <<<
-        ln -s ~{inputfile} ~{sub(basename(inputfile), ".bam$", ".bam.bam")}
 
-        echo ~{prefix}
-        mkdir -p ~{default_location}
+        ln -s "~{inputfile}" "~{sub(basename(inputfile), ".bam$", ".bam.bam")}"
+
+        echo "~{prefix}"
+        mkdir -p "~{default_location}"
 
         fastqc \
-            -o ~{default_location} \
-            ~{sub(basename(inputfile), ".bam$", ".bam.bam")}
+            -o "~{default_location}" \
+            "~{sub(basename(inputfile), ".bam$", ".bam.bam")}"
     >>>
 
     output {

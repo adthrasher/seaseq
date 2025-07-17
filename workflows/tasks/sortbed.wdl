@@ -11,8 +11,8 @@ task sortbed {
 
     command <<<
         sort-bed \
-            ~{bedfile} \
-            > ~{outputfile}
+            "~{bedfile}" \
+            > "~{outputfile}"
     >>>
 
     output {

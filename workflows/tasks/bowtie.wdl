@@ -3,9 +3,9 @@ version 1.0
 task bowtie {
     input {
         File fastqfile
+        Array[File]+ index_files
         File? fastqfile_R2
         File? metricsfile
-        Array[File]+ index_files
         String? prefix
         String outputfile = (
             if (defined(prefix))
@@ -15,14 +15,11 @@ task bowtie {
             ]) + ".sam"
             else
                 if (defined(fastqfile_R2))
-                then sub(basename(fastqfile), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz", ".sam")
+                then sub(basename(fastqfile),
+                    "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz",
+                    ".sam")
                 else sub(basename(fastqfile), ".fastq.gz|.fq.gz", ".sam")
         )
-        Int read_length = 75
-        Int insert_size = 600
-        Int limit_alignments = 2
-        Int good_alignments = 2
-        Boolean best_alignments = true
         String strandedness = "fr"
         String stranded_m = (
             if strandedness == "fr"
@@ -35,57 +32,63 @@ task bowtie {
                     then "--ff"
                     else "--fr"
         )
+        Boolean best_alignments = true
+        Int read_length = 75
+        Int insert_size = 600
+        Int limit_alignments = 2
+        Int good_alignments = 2
         Int additional_memory_gb = 10
         Int max_retries = 1
         Int ncpu = 20
     }
 
-    Int memory_gb = ceil(size(fastqfile, "GiB")) + ceil(size(index_files, "GiB")) + additional_memory_gb
+    Int memory_gb = ceil(size(fastqfile, "GiB"))
+        + ceil(size(index_files, "GiB"))
+        + additional_memory_gb
 
     command <<<
         if [ -f "~{metricsfile}" ]; then
-            readlength=$(tail -n 1 ~{metricsfile} | awk '{print $6}');
-            if [ $readlength -lt 28 ]; then readlength=28; fi
-            echo "Metrics file with readlength " $readlength
+            readlength=$(tail -n 1 "~{metricsfile}" | awk '{print $6}');
+            if [ "$readlength" -lt 28 ]; then readlength=28; fi
+            echo "Metrics file with readlength " "$readlength"
         else
             readlength=~{read_length}
         fi
 
-        echo $readlength
+        echo "$readlength"
         if [ -f "~{fastqfile_R2}" ]; then
             bowtie \
                 --chunkmbs=256 \
-                -l $readlength \
+                -l "$readlength" \
                 -p ~{ncpu} \
                 -k ~{good_alignments} \
                 -m ~{limit_alignments} \
                 -X ~{insert_size} \
-                ~{stranded_m} \
+                "~{stranded_m}" \
                 ~{true="--best" false="" best_alignments} \
                 -S \
-                ~{sub(index_files[0], "(.rev)?.[0-9].ebwt$", "")} \
-                -1 ~{fastqfile} \
-                -2 ~{fastqfile_R2} \
-                > ~{outputfile}
+                "~{sub(index_files[0], "(.rev)?.[0-9].ebwt$", "")}" \
+                -1 "~{fastqfile}" \
+                -2 "~{fastqfile_R2}" \
+                > "~{outputfile}"
 
         else
             bowtie \
-                -l $readlength \
+                -l "$readlength" \
                 -p ~{ncpu} \
                 -k ~{good_alignments} \
                 -m ~{limit_alignments} \
                 ~{true="--best" false="" best_alignments} \
                 -S \
-                ~{sub(index_files[0], "(.rev)?.[0-9].ebwt$", "")} \
-                ~{fastqfile} \
-                > ~{outputfile}
+                "~{sub(index_files[0], "(.rev)?.[0-9].ebwt$", "")}" \
+                "~{fastqfile}" \
+                > "~{outputfile}"
                 
         fi
     >>>
 
     output {
         File samfile = "~{outputfile}"
-    #Array[File?] samfile = glob("*.sam")
     }
 
     runtime {
@@ -99,8 +102,8 @@ task bowtie {
 task spikein_SE {
     input {
         File fastqfile
-        File? metricsfile
         Array[File]+ index_files
+        File? metricsfile
         String? prefix
         String outputfile = (
             if (defined(prefix))
@@ -108,39 +111,41 @@ task spikein_SE {
             else sub(basename(fastqfile), ".fastq.gz|.fq.gz", ".unaligned")
         )
         String nameoffile = basename(fastqfile, ".gz")
-        Int read_length = 75
-        Boolean best_alignments = true
         String default_location = "."
+        Boolean best_alignments = true
+        Int read_length = 75
         Int additional_memory_gb = 10
         Int max_retries = 1
         Int ncpu = 20
     }
 
-    Int memory_gb = ceil(size(fastqfile, "GiB")) + ceil(size(index_files, "GiB")) + additional_memory_gb
+    Int memory_gb = ceil(size(fastqfile, "GiB"))
+        + ceil(size(index_files, "GiB"))
+        + additional_memory_gb
 
     command <<<
-        mkdir -p ~{default_location}
+        mkdir -p "~{default_location}"
 
         if [ -f "~{metricsfile}" ]; then
-            readlength=$(tail -n 1 ~{metricsfile} | awk '{print $6}');
-            if [ $readlength -lt 28 ]; then readlength=28; fi
-            echo "Metrics file with readlength " $readlength
+            readlength=$(tail -n 1 "~{metricsfile}" | awk '{print $6}');
+            if [ "$readlength" -lt 28 ]; then readlength=28; fi
+            echo "Metrics file with readlength " "$readlength"
         else
             readlength=~{read_length}
         fi
 
-        echo $readlength
+        echo "$readlength"
         bowtie \
-            -l $readlength \
+            -l "$readlength" \
             -p ~{ncpu} \
-            --un ~{nameoffile} \
+            --un "~{nameoffile}" \
             ~{true="--best" false="" best_alignments} \
             -S \
-            ~{sub(index_files[0], "(.rev)?.[0-9].ebwt$", "")} \
-            ~{fastqfile} \
-            1>output.sam 2>~{default_location}/~{outputfile}.out
+            "~{sub(index_files[0], "(.rev)?.[0-9].ebwt$", "")}" \
+            "~{fastqfile}" \
+            1>output.sam 2>"~{default_location}/~{outputfile}.out"
 
-        gzip ~{nameoffile}
+        gzip "~{nameoffile}"
     >>>
 
     output {
@@ -160,19 +165,18 @@ task spikein_PE {
     input {
         File fastqfile
         File fastqfile_R2
-        File? metricsfile
         Array[File]+ index_files
+        File? metricsfile
         String? prefix
         String outputfile = (
             if (defined(prefix))
             then select_first([prefix, basename(fastqfile)]) + ".unaligned"
-            else sub(basename(fastqfile), "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz", ".unaligned")
+            else sub(basename(fastqfile),
+                "_R?[12]_....f.*q.gz|_R?[12].f.*q.gz",
+                ".unaligned")
         )
         String nameoffile_R1 = basename(fastqfile, ".gz")
         String nameoffile_R2 = basename(fastqfile_R2, ".gz")
-        Int read_length = 75
-        Int insert_size = 600
-        Boolean best_alignments = true
         String strandedness = "fr"
         String stranded_m = (
             if strandedness == "fr"
@@ -183,39 +187,44 @@ task spikein_PE {
             then "--ff"
             else "--fr"
         )
+        Boolean best_alignments = true
+        Int read_length = 75
+        Int insert_size = 600
         Int additional_memory_gb = 10
         Int max_retries = 1
         Int ncpu = 20
     }
 
-    Int memory_gb = ceil(size(fastqfile, "GiB")) + ceil(size(index_files, "GiB")) + additional_memory_gb
+    Int memory_gb = ceil(size(fastqfile, "GiB"))
+        + ceil(size(index_files, "GiB"))
+        + additional_memory_gb
 
     command <<<
         if [ -f "~{metricsfile}" ]; then
-            readlength=$(tail -n 1 ~{metricsfile} | awk '{print $6}');
-            if [ $readlength -lt 28 ]; then readlength=28; fi
-            echo "Metrics file with readlength " $readlength
+            readlength=$(tail -n 1 "~{metricsfile}" | awk '{print $6}');
+            if [ "$readlength" -lt 28 ]; then readlength=28; fi
+            echo "Metrics file with readlength " "$readlength"
         else
             readlength=~{read_length}
         fi
 
-        echo $readlength
+        echo "$readlength"
         bowtie \
             --chunkmbs=256 \
-            -l $readlength \
+            -l "$readlength" \
             --un unaligned \
             -p ~{ncpu} \
             -X ~{insert_size} \
-            ~{stranded_m} \
+            "~{stranded_m}" \
             ~{true="--best" false="" best_alignments} \
             -S \
-            ~{sub(index_files[0], "(.rev)?.[0-9].ebwt$", "")} \
-            -1 ~{fastqfile} \
-            -2 ~{fastqfile_R2} \
-            1>output.sam 2>~{outputfile}.out
-            
-        mv unaligned_1 ~{nameoffile_R1}; gzip ~{nameoffile_R1}
-        mv unaligned_2 ~{nameoffile_R2}; gzip ~{nameoffile_R2}
+            "~{sub(index_files[0], "(.rev)?.[0-9].ebwt$", "")}" \
+            -1 "~{fastqfile}" \
+            -2 "~{fastqfile_R2}" \
+            1>output.sam 2>"~{outputfile}.out"
+
+        mv unaligned_1 "~{nameoffile_R1}"; gzip "~{nameoffile_R1}"
+        mv unaligned_2 "~{nameoffile_R2}"; gzip "~{nameoffile_R2}"
     >>>
 
     output {
@@ -242,13 +251,13 @@ task index {
 
     command <<<
         if [[ "~{reference}" == *"gz" ]]; then
-            gunzip -c ~{reference} > ~{sub(basename(reference), ".gz", "")}
+            gunzip -c "~{reference}" > "~{sub(basename(reference), ".gz", "")}"
         else
-           ln -s ~{reference} ~{sub(basename(reference), ".gz", "")}
+           ln -s "~{reference}" "~{sub(basename(reference), ".gz", "")}"
         fi
 
-        bowtie-build --threads ~{ncpu} ~{sub(basename(reference), ".gz", "")} ~{sub(
-             basename(reference), ".gz", "")}-index
+        bowtie-build --threads ~{ncpu} "~{sub(basename(reference), ".gz", "")}" \
+            "~{sub(basename(reference), ".gz", "")}-index"
     >>>
 
     output {
