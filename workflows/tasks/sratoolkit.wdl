@@ -11,7 +11,7 @@ task fastqdump {
 
     command <<<
          # configuration for sra-toolkit
-         mkdir -p $PWD/ncbi $HOME/.ncbi
+         mkdir -p "$PWD/ncbi" "$HOME/.ncbi"
          echo """
          /LIBS/GUID = \"randomuuid\"
          /config/default = \"false\"
@@ -23,16 +23,16 @@ task fastqdump {
          /repository/user/ad/public/apps/wgs/volumes/wgsAd = \".\"
          /repository/user/ad/public/root = \".\"
          /repository/user/default-path = \"$PWD/ncbi\"
-         """ > $HOME/.ncbi/user-settings.mkfg
+         """ > "$HOME/.ncbi/user-settings.mkfg"
 
          # make number of threads compatible for DNAnexus
          threads=~{ncpu}
          if [ "~{cloud}" == 'true' ]; then
-             output=$(sra-stat --meta --quick ~{sra_id})
+             output=$(sra-stat --meta --quick "~{sra_id}")
              total=0
              for line in $output; do
-                 value=$(echo $line | cut -d '|' -f 3 | cut -d ':' -f 1)
-                 total=$(($total + $value))
+                 value=$(echo "$line" | cut -d '|' -f 3 | cut -d ':' -f 1)
+                 total=$((total + value))
              done
              if [ "$total" -ge 50000000 ]; then
                  if [ "$threads" -ge 10 ]; then threads=10; fi
@@ -41,7 +41,7 @@ task fastqdump {
          fi
 
          # check if paired ended
-         numLines=$(fastq-dump -X 1 -Z --split-spot ~{sra_id} | wc -l)
+         numLines=$(fastq-dump -X 1 -Z --split-spot "~{sra_id}" | wc -l)
          paired_end="false"
          if [ "$numLines" -eq 8 ]; then
              paired_end="true"
@@ -54,15 +54,13 @@ task fastqdump {
                  -t $threads \
                  --gzip \
                  --split-files \
-                 -s ~{sra_id} -O ./
-
-             #zcat -f ~{sra_id}_1.fastq.gz ~{sra_id}_2.fastq.gz | gzip -nc > ~{sra_id}.merged.fastq.gz
+                 -s "~{sra_id}" -O ./
          else
              touch paired_file
              pfastq-dump \
                  -t $threads \
                  --gzip \
-                 -s ~{sra_id} -O ./
+                 -s "~{sra_id}" -O ./
         fi
     >>>
 
@@ -91,7 +89,7 @@ task srameta {
 
     command <<<
         # configuration for sra-toolkit
-        mkdir -p $PWD/ncbi $HOME/.ncbi
+        mkdir -p "$PWD/ncbi" "$HOME/.ncbi"
         echo """
         /LIBS/GUID = \"randomuuid\"
         /config/default = \"false\"
@@ -103,20 +101,18 @@ task srameta {
         /repository/user/ad/public/apps/wgs/volumes/wgsAd = \".\"
         /repository/user/ad/public/root = \".\"
         /repository/user/default-path = \"$PWD/ncbi\"
-        """ > $HOME/.ncbi/user-settings.mkfg
+        """ > "$HOME/.ncbi/user-settings.mkfg"
 
         # check if paired ended
-        numLines=$(fastq-dump -X 1 -Z --split-spot ~{sra_id} | wc -l)
-        paired_end="false"
-        touch paired_file
+        numLines=$(fastq-dump -X 1 -Z --split-spot "~{sra_id}" | wc -l)
+        echo false > paired_file
         if [ "$numLines" -eq 8 ]; then
-            paired_end="true"
             echo true > paired_file
         fi
     >>>
 
     output {
-        Boolean paired_end = read_string("paired_file") == "true"
+        Boolean paired_end = read_boolean("paired_file")
     }
 
     runtime {
